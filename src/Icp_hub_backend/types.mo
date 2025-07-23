@@ -1,9 +1,10 @@
 import Time "mo:base/Time";
 import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
-import Iter "mo:base/Iter";  // Add this import
-import Text "mo:base/Text";  // Add this import
+import Iter "mo:base/Iter"; 
+import Text "mo:base/Text";  
 import Array "mo:base/Array";
+import Hash "mo:base/Hash";
 
 module {
     // User Profile type
@@ -20,6 +21,14 @@ module {
         };
     };
 
+    // System statistics type
+    public type SystemStats = {
+        totalUsers: Nat;
+        totalRepositories: Nat;
+        totalFiles: Nat;
+        totalStorage: Nat;
+    };
+
     // User type
     public type User = {
         principal: Principal;
@@ -30,6 +39,139 @@ module {
         createdAt: Int;
         updatedAt: Int;
     };
+
+    public type BlockchainType = {
+        #ICP;
+        #Ethereum;
+        #Solana;
+        #Bitcoin;
+        #Polygon;
+        #Arbitrum;
+        #BinanceSmartChain;
+        #Avalanche;
+        #Near;
+        #Cosmos;
+        #Polkadot;
+    };
+
+    public type SmartContractLanguage = {
+        #Motoko;
+        #Solidity;
+        #Rust;
+        #Move;
+        #Clarity;
+        #Cairo;
+        #Vyper;
+        #Wasm;
+    };
+
+    public type DependencySource = {
+        #NPM;
+        #Cargo;
+        #Maven;
+        #GitHub: { owner: Text; repo: Text; commit: Text };
+        #IPFS: { cid: Text };
+        #Vessel;
+    };
+
+     public type FileType = {
+        #SmartContract: { chain: BlockchainType; language: Text };
+        #DeploymentConfig;
+        #Frontend;
+        #Backend;
+        #Documentation;
+        #Test;
+        #Other;
+    };
+
+    public type Dependency = {
+        name: Text;
+        version: Text;
+        source: DependencySource;
+    };
+
+    public type NetworkConfig = {
+        #Mainnet;
+        #Testnet: { name: Text };
+        #Local: { rpcUrl: Text };
+        #Custom: { chainId: Nat; rpcUrl: Text };
+    };
+
+    public type DeploymentConfig = {
+        network: NetworkConfig;
+        constructorArgs: ?Text;
+        gasLimit: ?Nat;
+        value: ?Nat;
+        wallet: ?Text;
+    };
+
+    public type ContractMetadata = {
+        blockchain: BlockchainType;
+        language: SmartContractLanguage;
+        version: Text;
+        compiler: ?Text;
+        abi: ?Text;
+        bytecode: ?Blob;
+        sourceFiles: [Text];
+        dependencies: [Dependency];
+        deploymentConfig: ?DeploymentConfig;
+    };
+
+     public type ProjectType = {
+        #DeFi;
+        #NFT;
+        #DAO;
+        #Gaming;
+        #Infrastructure;
+        #CrossChain;
+        #Other: Text;
+    };
+
+    public type DeploymentStatus = {
+        #Pending;
+        #InProgress;
+        #Success;
+        #Failed: { reason: Text };
+        #Verified;
+    };
+
+    public type DeploymentArtifacts = {
+        abi: ?Text;
+        bytecode: ?Text;
+        sourceMap: ?Text;
+        metadata: ?Text;
+    };
+
+     public type GasSettings = {
+        gasLimit: Nat;
+        maxFeePerGas: ?Nat;
+        maxPriorityFeePerGas: ?Nat;
+    };
+
+     public type ChainConfig = {
+        rpcUrl: Text;
+        chainId: Nat;
+        explorerUrl: Text;
+        nativeCurrency: { name: Text; symbol: Text; decimals: Nat };
+        gasSettings: ?GasSettings;
+        defaultAccount: ?Text;
+    };
+
+    public type DeploymentRecord = {
+        id: Text;
+        repositoryId: Text;
+        commitId: Text;
+        chain: ChainType;
+        contractAddress: ?Text;
+        transactionHash: ?Text;
+        deployedAt: Int;
+        deployedBy: Principal;
+        status: DeploymentStatus;
+        gasUsed: ?Nat;
+        cost: ?Nat;
+        artifacts: ?DeploymentArtifacts;
+    };
+
 
     // Repository Settings type
     public type RepositorySettings = {
@@ -56,6 +198,7 @@ module {
         #Write;
         #Admin;
         #Owner;
+        #Deploy: [BlockchainType];
     };
 
     // Collaborator type
@@ -76,6 +219,9 @@ module {
         lastModified: Int;
         author: Principal;
         commitMessage: ?Text;
+        fileType: ?FileType;
+        contractMetadata: ?ContractMetadata;
+        targetChain: ?BlockchainType;
     };
 
     // Commit type for version control
@@ -104,7 +250,7 @@ module {
         name: Text;
         description: ?Text;
         owner: Principal;
-        collaborators: [Collaborator];
+        collaborators: HashMap.HashMap<Principal, Collaborator>;
         isPrivate: Bool;
         settings: RepositorySettings;
         createdAt: Int;
@@ -115,7 +261,11 @@ module {
         stars: Nat;
         forks: Nat;
         language: ?Text;
-        size: Nat; // Repository size in bytes
+        size: Nat; 
+        supportedChains: [BlockchainType];
+        deploymentTargets: [DeploymentTarget];
+        chainConfigs: [(BlockchainType, ChainConfig)];
+        lastDeployment: ?DeploymentRecord;
     };
 
     // Add this type definition
@@ -124,18 +274,22 @@ module {
         name: Text;
         description: ?Text;
         owner: Principal;
-        collaborators: [Collaborator];
+        collaborators: [(Principal, Collaborator)];
         isPrivate: Bool;
         settings: RepositorySettings;
         createdAt: Int;
         updatedAt: Int;
-        files: [(Text, FileEntry)]; // Array of tuples instead of HashMap
+        files: [(Text, FileEntry)]; 
         commits: [Commit];
         branches: [Branch];
         stars: Nat;
         forks: Nat;
         language: ?Text;
         size: Nat;
+        supportedChains: [BlockchainType];
+        deploymentTargets: [DeploymentTarget];
+        chainConfigs: [(BlockchainType, ChainConfig)];
+        lastDeployment: ?DeploymentRecord;
     };
 
     // API Response types
@@ -162,6 +316,9 @@ module {
         initializeWithReadme: Bool;
         license: ?Text;
         gitignoreTemplate: ?Text;
+        targetChains: [BlockchainType];
+        projectType: ProjectType;
+        autoDeployEnabled: Bool;
     };
 
     // File upload request
@@ -360,7 +517,7 @@ module {
             name = repo.name;
             description = repo.description;
             owner = repo.owner;
-            collaborators = repo.collaborators;
+            collaborators = Iter.toArray(repo.collaborators.entries());
             isPrivate = repo.isPrivate;
             settings = repo.settings;
             createdAt = repo.createdAt;
@@ -372,6 +529,10 @@ module {
             forks = repo.forks;
             language = repo.language;
             size = repo.size;
+            supportedChains = repo.supportedChains;
+            deploymentTargets = repo.deploymentTargets;
+            chainConfigs = repo.chainConfigs;
+            lastDeployment = repo.lastDeployment;
         }
     };
 
@@ -380,13 +541,17 @@ module {
         for ((path, file) in serRepo.files.vals()) {
             fileMap.put(path, file);
         };
-        
+        let collaboratorMap = HashMap.HashMap<Principal, Collaborator>(serRepo.collaborators.size(), Principal.equal, Principal.hash);
+        for((principal, collab) in serRepo.collaborators.vals()) {
+            collaboratorMap.put(principal, collab);
+        };
+
         {
             id = serRepo.id;
             name = serRepo.name;
             description = serRepo.description;
             owner = serRepo.owner;
-            collaborators = serRepo.collaborators;
+            collaborators = collaboratorMap;
             isPrivate = serRepo.isPrivate;
             settings = serRepo.settings;
             createdAt = serRepo.createdAt;
@@ -398,6 +563,11 @@ module {
             forks = serRepo.forks;
             language = serRepo.language;
             size = serRepo.size;
+            supportedChains = serRepo.supportedChains;
+            deploymentTargets = serRepo.deploymentTargets;
+            chainConfigs = serRepo.chainConfigs;
+            lastDeployment = serRepo.lastDeployment;
+            
         }
     };
 
@@ -460,4 +630,5 @@ module {
             scope = results.scope;
         }
     };
+    
 }
