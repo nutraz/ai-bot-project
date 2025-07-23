@@ -14,7 +14,12 @@ import Option "mo:base/Option";
 import Order "mo:base/Order";
 import Int "mo:base/Int";
 import Float "mo:base/Float";
+import Timer "mo:base/Timer";
 import Prim "mo:prim";
+import CollaboratorManager "./collaborator";
+import Governance "./governance";
+import Auth "./auth";
+import GitOps "./git_operations";
 
 actor ICPHub {
     type User = Types.User;
@@ -30,6 +35,59 @@ actor ICPHub {
     type RepositoryListResponse = Types.RepositoryListResponse;
     type FileListResponse = Types.FileListResponse;
     type PaginationParams = Types.PaginationParams;
+
+//collaborator types
+    type AddCollaboratorRequest = CollaboratorManager.AddCollaboratorRequest;
+    type UpdateCollaboratorRequest = CollaboratorManager.UpdateCollaboratorRequest;
+    type RemoveCollaboratorRequest = CollaboratorManager.RemoveCollaboratorRequest;
+    type CollaboratorListRequest = CollaboratorManager.CollaboratorListRequest;
+    type CollaboratorInfo = CollaboratorManager.CollaboratorInfo;
+    type CollaboratorListResponse = CollaboratorManager.CollaboratorListResponse;
+
+//governance types
+    type ProposalId = Governance.ProposalId;
+    type VotingPower = Governance.VotingPower;
+    type TokenAmount = Governance.TokenAmount;
+    type ProposalStatus = Governance.ProposalStatus;
+    type ProposalType = Governance.ProposalType;
+    type Vote = Governance.Vote;
+    type VoteRecord = Governance.VoteRecord;
+    type Proposal = Governance.Proposal;
+    type GovernanceConfig = Governance.GovernanceConfig;
+    type GovernanceToken = Governance.GovernanceToken;
+    type VotingStats = Governance.VotingStats;
+    type CreateProposalRequest = Governance.CreateProposalRequest;
+    type CastVoteRequest = Governance.CastVoteRequest;
+    type ProposalListRequest = Governance.ProposalListRequest;
+    type ProposalListResponse = Governance.ProposalListResponse;
+    type AddDiscussionPostRequest = Governance.AddDiscussionPostRequest;
+    type DiscussionPost = Governance.DiscussionPost;
+
+//auth types
+    type SessionToken = Auth.SessionToken;
+    type ApiKey = Auth.ApiKey;
+    type ApiPermission = Auth.ApiPermission;
+    type AuthMethod = Auth.AuthMethod;
+    type AuthContext = Auth.AuthContext;
+    type Permission = Auth.Permission;
+
+    //git opertations types
+    type CommitRequest = GitOps.CommitRequest;
+    type FileAction = GitOps.FileAction;
+    type DiffResult = GitOps.DiffResult;
+    type MergeRequest = GitOps.MergeRequest;
+    type MergeConflict = GitOps.MergeConflict;
+    type MergeResult = GitOps.MergeResult;
+    type BranchRequest = GitOps.BranchRequest;
+    type TagRequest = GitOps.TagRequest;
+    type Tag = GitOps.Tag;
+    type GitLog = GitOps.GitLog;
+    type CloneRequest = GitOps.CloneRequest;
+    type GitStatus = GitOps.GitStatus;
+
+    type ChainType = Types.ChainType;
+    type DeploymentConfig = Types.DeploymentConfig;
+    type ChainConfig = Types.ChainConfig;    
 
     type SearchScope = {
     #All;
@@ -113,6 +171,7 @@ type UpdateUserProfileRequest = {
 
 type SerializableRepository = Types.SerializableRepository;
 type SerializableSearchResults = Types.SerializableSearchResults;
+type DeploymentRecord = Types.DeploymentRecord;
 
 
     // Stable variables for upgrade persistence
@@ -126,6 +185,30 @@ type SerializableSearchResults = Types.SerializableSearchResults;
     private var repositories = HashMap.HashMap<Text, Repository>(10, Text.equal, Text.hash);
     private var usernames = HashMap.HashMap<Text, Principal>(10, Text.equal, Text.hash);
 
+    //governance state
+    //private stable var governanceTimerId: ?Nat = null;//need to implement
+
+    private stable var governanceStateData: ?{
+        proposals: [(ProposalId, Proposal)];
+        governanceTokens: [(Principal, GovernanceToken)];
+        config: GovernanceConfig;
+        treasury: TokenAmount;
+        nextProposalId: ProposalId;
+    } = null;
+
+    private var governanceState = Governance.GovernanceState();
+
+    private stable var sessionManagerData: ?[(Text, SessionToken)] = null;
+    private stable var apiKeyManagerData: ?{
+        apiKeys: [(Text, ApiKey)];
+        keysByPrincipal: [(Principal, [Text])];
+    } = null;
+
+    private var sessionManager = Auth.SessionManager();
+    private var apiKeyManager = Auth.ApiKeyManager();
+
+    private var deployments = HashMap.HashMap<Text, [DeploymentRecord]>(10, Text.equal, Text.hash);
+
     // System functions for upgrades
     system func preupgrade() {
         usersEntries := Iter.toArray(users.entries());
@@ -137,6 +220,10 @@ type SerializableSearchResults = Types.SerializableSearchResults;
             }
         );
         usernamesEntries := Iter.toArray(usernames.entries());
+        governanceStateData := ?governanceState.preupgrade();
+
+        sessionManagerData := ?sessionManager.getAllSessions();
+        apiKeyManagerData := ?apiKeyManager.getUpgradeData();
     };
 
     system func postupgrade() {
@@ -160,6 +247,27 @@ type SerializableSearchResults = Types.SerializableSearchResults;
 
     usersEntries := [];
     repositoriesEntries := [];
+    switch(governanceStateData) {
+      case null { };
+      case(?data) {
+        governanceState.postupgrade(data);
+        governanceStateData := null;
+       };
+    };
+    switch (sessionManagerData) {
+        case (?data) {
+            sessionManager.restoreSessions(data);
+            sessionManagerData := null;
+        };
+        case null {};
+    };
+    switch (apiKeyManagerData) {
+        case (?data) {
+            apiKeyManager.restoreData(data);
+            apiKeyManagerData := null;
+        };
+        case null {};
+      };
     };
 
     // Helper functions
@@ -181,16 +289,14 @@ type SerializableSearchResults = Types.SerializableSearchResults;
     };
     return n;
     };
-
+    
     private func canWrite(caller: Principal, repositoryId: Text): Bool {
         switch (repositories.get(repositoryId)) {
             case null false;
             case (?repo) {
                 if (repo.owner == caller) return true;
                 // Check collaborators with write permission
-                switch (Array.find<Types.Collaborator>(repo.collaborators, func(collab) {
-                    collab.principal == caller;
-                })) {
+                switch (repo.collaborators.get(caller)) {
                     case null false;
                     case (?collab) {
                         switch (collab.permission) {
@@ -805,8 +911,28 @@ public shared({ caller }) func createRepository(request: CreateRepositoryRequest
         return #Err(#BadRequest("Description cannot exceed 500 characters."));
     };
 
+    if (request.targetChains.size() == 0) {
+            return #Err(#BadRequest("At least one target chain must be specified"));
+        };
+
+    let chainConfigs = Buffer.Buffer<(Types.BlockchainType, Types.ChainConfig)>(request.targetChains.size());
+      for (chain in request.targetChains.vals()) {
+      chainConfigs.add((chain, Utils.getDefaultChainConfig(chain)));
+    };
+
     let now = Time.now();
     let repositoryId = generateRepositoryId();
+
+    let targetChains = if (request.targetChains.size() == 0) {
+        [#ICP];
+    } else {
+        request.targetChains;
+    };
+
+    let chainConfigsBuffer = Buffer.Buffer<(Types.BlockchainType, Types.ChainConfig)>(targetChains.size());
+    for (chain in targetChains.vals()) {
+        chainConfigsBuffer.add((chain, Utils.getDefaultChainConfig(chain)));
+    };
     
     let defaultSettings: Types.RepositorySettings = {
         defaultBranch = "main";
@@ -832,24 +958,29 @@ public shared({ caller }) func createRepository(request: CreateRepositoryRequest
         name = request.name;
         description = request.description;
         owner = caller;
-        collaborators = [];
+        collaborators = HashMap.HashMap<Principal,
+        Types.Collaborator>(0, Principal.equal, Principal.hash);
         isPrivate = request.isPrivate;
         settings = defaultSettings;
         createdAt = now;
         updatedAt = now;
-        files = HashMap.HashMap<Text, FileEntry>(10, Text.equal, Text.hash); // Initialize HashMap instead of empty array
+        files = HashMap.HashMap<Text, FileEntry>(10, Text.equal, Text.hash); 
         commits = [];
         branches = [mainBranch];
         stars = 0;
         forks = 0;
         language = null;
         size = 0;
+        supportedChains = targetChains;
+        deploymentTargets = [];
+        chainConfigs = Buffer.toArray(chainConfigsBuffer);
+        lastDeployment = null;
     };
 
     // Update State
     repositories.put(repositoryId, repository);
     
-    // Update user's repository list using the user object from step 1
+    // Update user's repository list using the user object
     let updatedRepos = Array.append<Text>(user.repositories, [repositoryId]);
     
     // Use cleaner 'with' syntax for the update
@@ -897,14 +1028,14 @@ public shared query({ caller}) func listRepositories(
     // Optimized Loop
     for (repoId in user.repositories.vals()) {
         switch (repositories.get(repoId)) {
-            case null {}; // Skip if repo ID is stale and not found
+            case null {};
             case (?repo) {
 
-                // Auth Check: Check permissions on the already-fetched repo.
+                // Auth Check
 
                 if (Utils.canReadRepository(caller, repo)) {
 
-                    // Pagination: Only add repos that are on the requested page.
+                    // Pagination
 
                     if (visibleReposCount >= startIndex and paginatedRepos.size() < limit) {
                         paginatedRepos.add(repo);
@@ -936,10 +1067,10 @@ public shared({ caller }) func deleteRepository(id: Text): async Result<Bool, Er
                 return #Err(#Forbidden("Only the repository owner can delete it."));
             };
 
-            // 2. Delete the repository from the main map.
+            // Delete the repository from the main map.
             repositories.delete(id);
             
-            // 3. Update the owner's list of repositories.
+            // Update the owner's list of repositories.
             switch (users.get(repo.owner)) {
                 case null {
                     // If the user is not found, we can't update their repository list.
@@ -1009,9 +1140,34 @@ public shared({ caller }) func updateRepository(
 
 //File management APIs
 public shared({ caller }) func uploadFile(request: UploadFileRequest): async Result<FileEntry, Error> {
+    let fileType = Utils.detectFileType(request.path, request.content);
     let repo = switch (repositories.get(request.repositoryId)) {
         case null { return #Err(#NotFound("Repository not found")); };
         case (?repo) { repo };
+    };
+    let contractMetadata = switch (fileType) {
+      case (?#SmartContract(info)) {
+        let languageVariant = switch (info.language) {
+            case "solidity" { #Solidity };
+            case "motoko" { #Motoko };
+            case "rust" { #Rust };
+            case "vyper" { #Vyper };
+            case "cairo" { #Cairo };
+            case "clarity" { #Clarity };
+            case "michelson" { #Michelson };
+            case "move" { #Move };
+            case "plutus" { #Plutus };
+            case "wasm" { #Wasm };
+            case _ { #Solidity }; // Default case
+        };
+         ?GitOps.parseContractMetadata(
+            request.path,
+            request.content,
+            info.chain,
+            languageVariant
+        );
+        };
+        case _ null;
     };
 
     if (not Utils.canWriteRepository(caller, repo)) {
@@ -1056,6 +1212,13 @@ public shared({ caller }) func uploadFile(request: UploadFileRequest): async Res
         lastModified = now;
         author = caller;
         commitMessage = ?request.commitMessage;
+        fileType = fileType;
+        contractMetadata = contractMetadata;
+        targetChain = switch (fileType) {
+            case (?#SmartContract(info)) ?info.chain;
+            case _ null;
+        };
+
     };
     
     // Use HashMap.put to add or update the file entry
@@ -1156,10 +1319,10 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
 
     let fileSize = fileToDelete.size;
 
-    // Optimized Deletion: Instantly remove the file from the HashMap
+    // Instantly remove the file from the HashMap
     repo.files.delete(path);
 
-    // Critical Bug Fix: Correctly recalculate the new repository size
+    // Correctly recalculate the new repository size
     let newSizeAsInt : Int = repo.size - fileSize;
     let newSize = if (newSizeAsInt < 0) 0 else intToNat(newSizeAsInt);
 
@@ -1189,4 +1352,841 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
     public query func health(): async Bool {
         true;
     };
+
+    public shared({ caller }) func deployContract(
+        repositoryId: Text,
+        filePath: Text,
+        targetChain: ChainType,
+        deployConfig: ?DeploymentConfig
+    ): async Result<DeploymentRecord, Error> {
+        // Check permissions
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canWriteRepository(caller, repo)) {
+                    return #Err(#Forbidden("No deployment permission"));
+                };
+                
+                // Get the contract file
+                switch (repo.files.get(filePath)) {
+                    case null { #Err(#NotFound("Contract file not found")); };
+                    case (?file) {
+                        // Verify it's a smart contract
+                        switch (file.fileType) {
+                            case (?#SmartContract(contractInfo)) {
+                                if (contractInfo.chain != targetChain) {
+                                    return #Err(#BadRequest("Contract not compatible with target chain"));
+                                };
+                                
+                                // Call chain_fusion module to deploy
+                                let deploymentResult = await ChainFusion.deployContract({
+                                    chain = targetChain;
+                                    bytecode = file.content;
+                                    config = deployConfig;
+                                    metadata = file.contractMetadata;
+                                });
+                                
+                                switch (deploymentResult) {
+                                    case (#Ok(deployment)) {
+                                        // Track deployment
+                                        addDeploymentRecord(repositoryId, deployment);
+                                        #Ok(deployment);
+                                    };
+                                    case (#Err(e)) { #Err(e); };
+                                };
+                            };
+                            case _ { #Err(#BadRequest("File is not a smart contract")); };
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    public func autoDeployOnCommit(
+        repositoryId: Text,
+        commitId: Text,
+        changedFiles: [Text]
+    ): async () {
+        switch (repositories.get(repositoryId)) {
+            case null {};
+            case (?repo) {
+                // Check each changed file
+                for (filePath in changedFiles.vals()) {
+                    switch (repo.files.get(filePath)) {
+                        case null {};
+                        case (?file) {
+                            switch (file.fileType) {
+                                case (?#SmartContract(contractInfo)) {
+                                    // Auto-deploy if configured
+                                    for (target in repo.deploymentTargets.vals()) {
+                                        if (target.chain == contractInfo.chain and target.autoDeploy) {
+                                            let _ = await deployContract(
+                                                repositoryId,
+                                                filePath,
+                                                target.chain,
+                                                ?target.config
+                                            );
+                                        };
+                                    };
+                                };
+                                case _ {};
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    //Collaborator Management APIs
+    public shared({ caller }) func addCollaborator(request: AddCollaboratorRequest): async Result<CollaboratorInfo, Error> {
+    return CollaboratorManager.addCollaborator(
+        caller,
+        request,
+        repositories,
+        users,
+        usernames
+    );
+};
+
+public shared({ caller }) func removeCollaborator(request: RemoveCollaboratorRequest): async Result<Bool, Error> {
+    return CollaboratorManager.removeCollaborator(
+        caller,
+        request,
+        repositories,
+        usernames
+    );
+};
+
+public shared({ caller }) func updateCollaboratorPermission(request: UpdateCollaboratorRequest): async Result<CollaboratorInfo, Error> {
+    return CollaboratorManager.updateCollaboratorPermission(
+        caller,
+        request,
+        repositories,
+        usernames,
+        users
+    );
+};
+
+public shared({ caller }) func listCollaborators(request: CollaboratorListRequest): async Result<CollaboratorListResponse, Error> {
+    return CollaboratorManager.listCollaborators(
+        caller,
+        request,
+        repositories,
+        users
+    );
+};
+
+public shared({ caller }) func initializeGovernanceTokens(amount: TokenAmount): async Result<Bool, Error> {
+        // Check if user is registered
+        switch (users.get(caller)) {
+            case null { return #Err(#Unauthorized("User not registered")); };
+            case (?user) {
+                governanceState.initializeGovernanceToken(caller, amount);
+                return #Ok(true);
+            };
+        };
+    };
+
+    // Get user's voting power
+    public query({ caller }) func getVotingPower(user: ?Principal): async VotingPower {
+        let targetUser = switch (user) {
+            case null { caller };
+            case (?p) { p };
+        };
+        governanceState.getVotingPower(targetUser);
+    };
+
+    // Create a new proposal
+    public shared({ caller }) func createProposal(request: CreateProposalRequest): async Result<Proposal, Error> {
+        return governanceState.createProposal(caller, request, users);
+    };
+
+    // Cast a vote on a proposal
+    public shared({ caller }) func castVote(request: CastVoteRequest): async Result<Bool, Error> {
+        return governanceState.castVote(caller, request);
+    };
+
+    // Get a specific proposal
+    public query func getProposal(proposalId: ProposalId): async Result<Proposal, Error> {
+        switch (governanceState.getProposal(proposalId)) {
+            case null { #Err(#NotFound("Proposal not found")); };
+            case (?proposal) { #Ok(proposal); };
+        };
+    };
+
+    // List proposals with filters
+    public query func listProposals(request: ProposalListRequest): async ProposalListResponse {
+        governanceState.listProposals(request);
+    };
+
+    // Process proposal results (should be called periodically)
+    public shared func processProposalResults(): async [ProposalId] {
+        governanceState.processProposalResults();
+    };
+
+    // Execute a passed proposal
+    public shared({ caller }) func executeProposal(proposalId: ProposalId): async Result<Bool, Error> {
+        return governanceState.executeProposal(caller, proposalId, repositories);
+    };
+
+    // Add a discussion post to a proposal
+    public shared({ caller }) func addDiscussionPost(request: AddDiscussionPostRequest): async Result<DiscussionPost, Error> {
+        return governanceState.addDiscussionPost(caller, request);
+    };
+
+    // Get voting statistics
+    public query func getVotingStats(): async VotingStats {
+        governanceState.getVotingStats();
+    };
+
+    // Helper function to check if a user can create proposals
+    public query({ caller }) func canCreateProposal(): async Bool {
+        switch (users.get(caller)) {
+            case null { false };
+            case (?user) {
+                let votingPower = governanceState.getVotingPower(caller);
+                votingPower >= 10;
+            };
+        };
+    };
+
+    // Get user's governance token balance
+    public query({ caller }) func getGovernanceTokenBalance(user: ?Principal): async Result<{balance: TokenAmount; staked: TokenAmount; votingPower: VotingPower}, Error> {
+        let targetUser = switch (user) {
+            case null { caller };
+            case (?p) { p };
+        };
+        
+        let votingPower = governanceState.getVotingPower(targetUser);
+
+        // returning voting power as both balance and staked
+        #Ok({
+            balance = votingPower;
+            staked = 0;
+            votingPower = votingPower;
+        });
+    };
+
+    // Create a repository update proposal
+    public shared({ caller }) func proposeRepositoryUpdate(
+        repositoryId: Text,
+        newSettings: Types.RepositorySettings,
+        title: Text,
+        description: Text
+    ): async Result<Proposal, Error> {
+
+        // Verify repository exists and caller has permission
+        switch (repositories.get(repositoryId)) {
+            case null { return #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canWriteRepository(caller, repo)) {
+                    return #Err(#Forbidden("You don't have permission to propose updates for this repository"));
+                };
+                
+                let proposalRequest: CreateProposalRequest = {
+                    proposalType = #RepositoryUpdate({
+                        repositoryId = repositoryId;
+                        newSettings = newSettings;
+                    });
+                    title = title;
+                    description = description;
+                    votingDuration = null;
+                    executionDelay = null; 
+                };
+                
+                return governanceState.createProposal(caller, proposalRequest, users);
+            };
+        };
+    };
+
+    // Create a collaborator promotion proposal
+    public shared({ caller }) func proposeCollaboratorPromotion(
+        repositoryId: Text,
+        collaboratorUsername: Text,
+        newPermission: Types.CollaboratorPermission,
+        title: Text,
+        description: Text
+    ): async Result<Proposal, Error> {
+
+        // Verify repository exists
+        switch (repositories.get(repositoryId)) {
+            case null { return #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                // Check if caller can manage collaborators
+                if (not CollaboratorManager.canManageCollaborators(caller, repo)) {
+                    return #Err(#Forbidden("You don't have permission to propose collaborator changes"));
+                };
+                
+                // Get collaborator principal from username
+                let collaboratorPrincipal = switch (usernames.get(collaboratorUsername)) {
+                    case null { return #Err(#NotFound("User not found")); };
+                    case (?principal) { principal };
+                };
+                
+                // Verify collaborator exists
+                switch (repo.collaborators.get(collaboratorPrincipal)) {
+                    case null { return #Err(#NotFound("User is not a collaborator")); };
+                    case (?collab) {
+                        let proposalRequest: CreateProposalRequest = {
+                            proposalType = #CollaboratorPromotion({
+                                repositoryId = repositoryId;
+                                collaborator = collaboratorPrincipal;
+                                newPermission = newPermission;
+                            });
+                            title = title;
+                            description = description;
+                            votingDuration = null;
+                            executionDelay = null;
+                        };
+                        
+                        return governanceState.createProposal(caller, proposalRequest, users);
+                    };
+                };
+            };
+        };
+    };
+
+    // Timer function to automatically process proposals (call this periodically)
+    public shared func processGovernanceTimers(): async () {
+        let processedProposals = governanceState.processProposalResults();
+        // for logging or notifications
+    };
+
+     public shared({ caller }) func login(): async Result<SessionToken, Error> {
+        if (Principal.isAnonymous(caller)) {
+            return #Err(#Unauthorized("Anonymous principals cannot login"));
+        };
+        
+        // Check if user is registered
+        switch (users.get(caller)) {
+            case null {
+                return #Err(#NotFound("User not registered. Please register first."));
+            };
+            case (?user) {
+                let session = sessionManager.createSession(caller);
+                #Ok(session);
+            };
+        };
+    };
+
+    // Logout
+    public shared func logout(sessionToken: Text): async Bool {
+        sessionManager.deleteSession(sessionToken);
+    };
+
+    // Validate session
+    public query func validateSession(sessionToken: Text): async Result<Principal, Error> {
+        sessionManager.validateSession(sessionToken);
+    };
+
+    // Create API key
+    public shared({ caller }) func createApiKey(
+        name: Text,
+        permissions: [ApiPermission],
+        expiresInDays: ?Nat
+    ): async Result<Text, Error> {
+        // Check if user is registered
+        switch (users.get(caller)) {
+            case null {
+                return #Err(#Unauthorized("User not registered"));
+            };
+            case (?user) {
+                let expiresAt = switch (expiresInDays) {
+                case null { null };
+                case (?days) {
+
+                    // Convert days to nanoseconds and add to current time
+                    let durationNanos: Int = days * 24 * 60 * 60 * 1_000_000_000;
+                    let expirationTime: Int = Time.now() + durationNanos;
+                    ?expirationTime;
+                };
+            };
+                
+                return apiKeyManager.createApiKey(caller, name, permissions, expiresAt);
+            };
+        };
+    };
+
+    // List user's API keys
+    public query({ caller }) func listApiKeys(): async [ApiKey] {
+        apiKeyManager.listApiKeys(caller);
+    };
+
+    // Revoke API key
+    public shared({ caller }) func revokeApiKey(keyId: Text): async Result<Bool, Error> {
+        apiKeyManager.revokeApiKey(caller, keyId);
+    };
+
+    // Check permissions
+    public query({ caller }) func checkPermission(permission: Permission): async Bool {
+        Auth.hasPermission(caller, permission, users);
+    };
+
+    // Get auth context
+    public query({ caller }) func getAuthContext(): async AuthContext {
+        Auth.createAuthContext(caller, #InternetIdentity, users);
+    };
+
+    // Protected endpoint example - update existing functions
+    public shared({ caller }) func createRepositoryWithAuth(
+    request: CreateRepositoryRequest,
+    sessionToken: ?Text
+): async Result<SerializableRepository, Error> {
+    // Validate authentication
+    let principal = switch (sessionToken) {
+        case null caller;
+        case (?token) {
+            switch (sessionManager.validateSession(token)) {
+                case (#Err(e)) { return #Err(e); };
+                case (#Ok(p)) p;
+            };
+        };
+    };
+    
+    // Check permission
+    if (not Auth.hasPermission(principal, #CreateRepository, users)) {
+        return #Err(#Forbidden("You don't have permission to create repositories"));
+    };
+    
+    // Call existing createRepository logic and await its result
+    return await createRepository(request);
+};
+
+    // Cleanup expired sessions (call periodically)
+    public shared func cleanupExpiredSessions(): async Nat {
+        sessionManager.cleanupExpiredSessions();
+    };
+
+    // Rate limiting example
+    private var rateLimitStore = HashMap.HashMap<Text, Auth.RateLimitEntry>(100, Text.equal, Text.hash);
+    
+    public shared({ caller }) func rateLimitedEndpoint(): async Result<Text, Error> {
+        let config: Auth.RateLimitConfig = {
+            maxRequests = 100;
+            windowSeconds = 3600; // 1 hour
+            identifier = Principal.toText(caller);
+        };
+        
+        if (not Auth.checkRateLimit(config.identifier, config, rateLimitStore)) {
+            return #Err(#BadRequest("Rate limit exceeded"));
+        };
+        
+        #Ok("Success");
+    };
+
+    //git operations apis
+
+    public shared({ caller }) func commit(request: CommitRequest): async Result<Types.Commit, Error> {
+        GitOps.createCommit(caller, request, repositories);
+    };
+
+    // Create a new branch
+    public shared({ caller }) func createBranch(request: BranchRequest): async Result<Types.Branch, Error> {
+        GitOps.createBranch(caller, request, repositories);
+    };
+
+    // Delete a branch
+    public shared({ caller }) func deleteBranch(
+        repositoryId: Text,
+        branchName: Text
+    ): async Result<Bool, Error> {
+        GitOps.deleteBranch(caller, repositoryId, branchName, repositories);
+    };
+
+    // Get commit history
+    public query({ caller }) func getCommitHistory(
+        repositoryId: Text,
+        branch: ?Text,
+        limit: ?Nat,
+        offset: ?Nat
+    ): async Result<GitLog, Error> {
+        let actualLimit = switch (limit) {
+            case null 50;
+            case (?l) Nat.min(l, 100);
+        };
+        
+        let actualOffset = switch (offset) {
+            case null 0;
+            case (?o) o;
+        };
+        
+        GitOps.getCommitHistory(repositoryId, branch, actualLimit, actualOffset, repositories);
+    };
+
+    // Get commit diff
+    public query({ caller }) func getCommitDiff(
+        repositoryId: Text,
+        commitId: Text
+    ): async Result<[DiffResult], Error> {
+        // Check read permission
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    #Err(#Forbidden("No read permission"));
+                } else {
+                    GitOps.getCommitDiff(repositoryId, commitId, repositories);
+                };
+            };
+        };
+    };
+
+    // Merge branches
+    public shared({ caller }) func mergeBranches(request: MergeRequest): async Result<MergeResult, Error> {
+        GitOps.mergeBranches(caller, request, repositories);
+    };
+
+    // Clone repository
+    public shared({ caller }) func cloneRepository(request: CloneRequest): async Result<SerializableRepository, Error> {
+        // Check if user is registered
+        switch (users.get(caller)) {
+            case null { #Err(#Unauthorized("User not registered")); };
+            case (?user) {
+                // Validate new repository name
+                if (not Utils.isValidRepositoryName(request.newName)) {
+                    return #Err(#BadRequest("Invalid repository name"));
+                };
+                
+                let result = GitOps.cloneRepository(
+                    caller,
+                    request,
+                    repositories,
+                    generateRepositoryId
+                );
+                
+                switch (result) {
+                    case (#Err(e)) { #Err(e); };
+                    case (#Ok(clonedRepo)) {
+                        // Update user's repository list
+                        let updatedRepos = Array.append(user.repositories, [clonedRepo.id]);
+                        let updatedUser = {
+                            user with
+                            repositories = updatedRepos;
+                            updatedAt = Time.now();
+                        };
+                        users.put(caller, updatedUser);
+                        
+                        #Ok(Types.repositoryToSerializable(clonedRepo));
+                    };
+                };
+            };
+        };
+    };
+
+    // Get repository status
+    public query({ caller }) func getGitStatus(
+        repositoryId: Text,
+        branch: Text
+    ): async Result<GitStatus, Error> {
+
+        // Check read permission
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    #Err(#Forbidden("No read permission"));
+                } else {
+                    GitOps.getStatus(repositoryId, branch, repositories);
+                };
+            };
+        };
+    };
+
+    // Create tag
+    public shared({ caller }) func createTag(request: TagRequest): async Result<Tag, Error> {
+        GitOps.createTag(caller, request, repositories);
+    };
+
+    // List branches
+    public query({ caller }) func listBranches(repositoryId: Text): async Result<[Types.Branch], Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    #Err(#Forbidden("No read permission"));
+                } else {
+                    #Ok(repo.branches);
+                };
+            };
+        };
+    };
+
+    // Get current branch
+    public query({ caller }) func getCurrentBranch(repositoryId: Text): async Result<Types.Branch, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    #Err(#Forbidden("No read permission"));
+                } else {
+                    switch (Array.find<Types.Branch>(repo.branches, func(b) { b.isDefault })) {
+                        case null { #Err(#NotFound("No default branch found")); };
+                        case (?branch) { #Ok(branch); };
+                    };
+                };
+            };
+        };
+    };
+
+    public shared({ caller }) func switchBranch(
+        repositoryId: Text,
+        branchName: Text
+    ): async Result<Bool, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canWriteRepository(caller, repo)) {
+                    return #Err(#Forbidden("No write permission"));
+                };
+                
+                // Check if branch exists
+                let branchExists = Array.find<Types.Branch>(
+                    repo.branches,
+                    func(b) { b.name == branchName }
+                );
+                
+                switch (branchExists) {
+                    case null { #Err(#NotFound("Branch not found")); };
+                    case (?_) {
+
+                        // Update branches
+                        let updatedBranches = Array.map<Types.Branch, Types.Branch>(
+                            repo.branches,
+                            func(b) {
+                                if (b.name == branchName) {
+                                    { b with isDefault = true }
+                                } else {
+                                    { b with isDefault = false }
+                                }
+                            }
+                        );
+                        
+                        let updatedRepo = {
+                            repo with
+                            branches = updatedBranches;
+                            updatedAt = Time.now();
+                        };
+                        
+                        repositories.put(repositoryId, updatedRepo);
+                        #Ok(true);
+                    };
+                };
+            };
+        };
+    };
+
+    // Get file history
+
+    public query({ caller }) func getFileHistory(
+        repositoryId: Text,
+        filePath: Text,
+        limit: ?Nat
+    ): async Result<[Types.Commit], Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    return #Err(#Forbidden("No read permission"));
+                };
+                
+                // Filter commits that changed this file
+                let fileCommits = Array.filter<Types.Commit>(
+                    repo.commits,
+                    func(commit) {
+                        Array.find<Text>(
+                            commit.changedFiles,
+                            func(path) { path == filePath }
+                        ) != null
+                    }
+                );
+                
+                // Sort by timestamp
+                let sortedCommits = Array.sort<Types.Commit>(
+                    fileCommits,
+                    func(a, b) { Int.compare(b.timestamp, a.timestamp) }
+                );
+                
+                // Apply limit
+                let actualLimit = switch (limit) {
+                    case null sortedCommits.size();
+                    case (?l) Nat.min(l, sortedCommits.size());
+                };
+                
+                #Ok(Array.subArray(sortedCommits, 0, actualLimit));
+            };
+        };
+    };
+
+    // Compare two branches
+    public query({ caller }) func compareBranches(
+        repositoryId: Text,
+        baseBranch: Text,
+        compareBranch: Text
+    ): async Result<{ahead: Nat; behind: Nat; commits: [Types.Commit]}, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    return #Err(#Forbidden("No read permission"));
+                };
+                
+                // Find branches
+                let base = Array.find<Types.Branch>(
+                    repo.branches,
+                    func(b) { b.name == baseBranch }
+                );
+                
+                let compare = Array.find<Types.Branch>(
+                    repo.branches,
+                    func(b) { b.name == compareBranch }
+                );
+                
+                switch (base, compare) {
+                    case (null, _) { #Err(#NotFound("Base branch not found")); };
+                    case (_, null) { #Err(#NotFound("Compare branch not found")); };
+                    case (?baseBr, ?compareBr) {
+                        // Simplified comparison
+                        #Ok({
+                            ahead = 0;
+                            behind = 0;
+                            commits = [];
+                        });
+                    };
+                };
+            };
+        };
+    };
+
+    // Revert a commit
+
+    public shared({ caller }) func revertCommit(
+        repositoryId: Text,
+        commitId: Text,
+        message: ?Text
+    ): async Result<Types.Commit, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canWriteRepository(caller, repo)) {
+                    return #Err(#Forbidden("No write permission"));
+                };
+                
+                // Find the commit to revert
+                let commitToRevert = Array.find<Types.Commit>(
+                    repo.commits,
+                    func(c) { c.id == commitId }
+                );
+                
+                switch (commitToRevert) {
+                    case null { #Err(#NotFound("Commit not found")); };
+                    case (?commit) {
+                        // Create revert commit
+                        let revertMessage = switch (message) {
+                            case null { "Revert \"" # commit.message # "\"" };
+                            case (?msg) { msg };
+                        };
+                        
+                        // Get current default branch
+                        let defaultBranch = Array.find<Types.Branch>(
+                            repo.branches,
+                            func(b) { b.isDefault }
+                        );
+                        
+                        switch (defaultBranch) {
+                            case null { #Err(#NotFound("No default branch")); };
+                            case (?branch) {
+                                // Create a commit that reverts the changes
+                                let revertRequest: CommitRequest = {
+                                    repositoryId = repositoryId;
+                                    branch = branch.name;
+                                    message = revertMessage;
+                                    files = [];
+                                    parentCommit = ?branch.commitId;
+                                };
+                                
+                                GitOps.createCommit(caller, revertRequest, repositories);
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    // Get repository statistics
+    public query({ caller }) func getRepositoryStats(repositoryId: Text): async Result<{
+        totalCommits: Nat;
+        totalBranches: Nat;
+        totalFiles: Nat;
+        contributors: [Principal];
+        languages: [Text];
+    }, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    return #Err(#Forbidden("No read permission"));
+                };
+                
+                // Get unique contributors
+                let contributorsBuffer = Buffer.Buffer<Principal>(10);
+                contributorsBuffer.add(repo.owner);
+                
+                for (commit in repo.commits.vals()) {
+                    let exists = Buffer.contains<Principal>(
+                        contributorsBuffer,
+                        commit.author,
+                        Principal.equal
+                    );
+                    if (not exists) {
+                        contributorsBuffer.add(commit.author);
+                    };
+                };
+                
+                // Get languages
+                let languagesBuffer = Buffer.Buffer<Text>(5);
+                for ((path, _) in repo.files.entries()) {
+                    switch (Utils.getFileExtension(path)) {
+                        case null {};
+                        case (?ext) {
+                            let lang = switch (ext) {
+                                case "mo" { "Motoko" };
+                                case "js" { "JavaScript" };
+                                case "ts" { "TypeScript" };
+                                case "py" { "Python" };
+                                case "rs" { "Rust" };
+                                case "go" { "Go" };
+                                case "java" { "Java" };
+                                case "cpp" { "C++" };
+                                case "cc" { "C++" };
+                                case "c" { "C" };
+                                case "h" { "C" };
+                                case _ { ext };
+                            };
+                            
+                            let exists = Buffer.contains<Text>(
+                                languagesBuffer,
+                                lang,
+                                Text.equal
+                            );
+                            if (not exists) {
+                                languagesBuffer.add(lang);
+                            };
+                        };
+                    };
+                };
+                
+                #Ok({
+                    totalCommits = repo.commits.size();
+                    totalBranches = repo.branches.size();
+                    totalFiles = repo.files.size();
+                    contributors = Buffer.toArray(contributorsBuffer);
+                    languages = Buffer.toArray(languagesBuffer);
+                });
+            };
+        };
+    };
+
 }
