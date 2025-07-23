@@ -20,6 +20,7 @@ import CollaboratorManager "./collaborator";
 import Governance "./governance";
 import Auth "./auth";
 import GitOps "./git_operations";
+import ChainFusion "./chain_fusion";
 
 actor ICPHub {
     type User = Types.User;
@@ -87,7 +88,14 @@ actor ICPHub {
 
     type ChainType = Types.ChainType;
     type DeploymentConfig = Types.DeploymentConfig;
-    type ChainConfig = Types.ChainConfig;    
+    type ChainConfig = Types.ChainConfig;   
+
+    // ChainFusion types
+    type DeployContractRequest = ChainFusion.DeployContractRequest;
+    type CrossChainMessage = ChainFusion.CrossChainMessage;
+    type BitcoinNetwork = ChainFusion.BitcoinNetwork;
+    type BitcoinAddress = ChainFusion.BitcoinAddress;
+    type Satoshi = ChainFusion.Satoshi; 
 
     type SearchScope = {
     #All;
@@ -207,7 +215,7 @@ type DeploymentRecord = Types.DeploymentRecord;
     private var sessionManager = Auth.SessionManager();
     private var apiKeyManager = Auth.ApiKeyManager();
 
-    private var deployments = HashMap.HashMap<Text, [DeploymentRecord]>(10, Text.equal, Text.hash);
+    private var deployments = HashMap.HashMap<Text, [Types.DeploymentRecord]>(10, Text.equal, Text.hash);
 
     // System functions for upgrades
     system func preupgrade() {
@@ -224,6 +232,7 @@ type DeploymentRecord = Types.DeploymentRecord;
 
         sessionManagerData := ?sessionManager.getAllSessions();
         apiKeyManagerData := ?apiKeyManager.getUpgradeData();
+        deploymentsEntries := Iter.toArray(deployments.entries());
     };
 
     system func postupgrade() {
@@ -235,6 +244,14 @@ type DeploymentRecord = Types.DeploymentRecord;
     repositories := HashMap.HashMap<Text, Repository>(repositoriesEntries.size(), 
                     Text.equal, 
                     Text.hash);
+
+    deployments := HashMap.fromIter<Text, [DeploymentRecord]>(
+            deploymentsEntries.vals(),
+            deploymentsEntries.size(),
+            Text.equal,
+            Text.hash
+        );
+         deploymentsEntries := [];
     for ((id, serRepo) in repositoriesEntries.vals()) {
         repositories.put(id, Types.serializableToRepository(serRepo));
     };
@@ -1353,11 +1370,12 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
         true;
     };
 
-    public shared({ caller }) func deployContract(
+     public shared({ caller }) func deployContract(
         repositoryId: Text,
         filePath: Text,
-        targetChain: ChainType,
-        deployConfig: ?DeploymentConfig
+        targetChain: Types.BlockchainType,
+        network: Types.NetworkConfig,
+        constructorArgs: ?Text
     ): async Result<DeploymentRecord, Error> {
         // Check permissions
         switch (repositories.get(repositoryId)) {
@@ -1365,6 +1383,16 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
             case (?repo) {
                 if (not Utils.canWriteRepository(caller, repo)) {
                     return #Err(#Forbidden("No deployment permission"));
+                };
+                
+                // Check if chain is supported by repo
+                let chainSupported = Array.find<Types.BlockchainType>(
+                    repo.supportedChains,
+                    func(c) { c == targetChain }
+                );
+                
+                if (chainSupported == null) {
+                    return #Err(#BadRequest("Repository doesn't support " # debug_show(targetChain)));
                 };
                 
                 // Get the contract file
@@ -1378,18 +1406,39 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
                                     return #Err(#BadRequest("Contract not compatible with target chain"));
                                 };
                                 
-                                // Call chain_fusion module to deploy
-                                let deploymentResult = await ChainFusion.deployContract({
+                                // Prepare deployment request for ChainFusion
+                                let deployRequest: DeployContractRequest = {
                                     chain = targetChain;
                                     bytecode = file.content;
-                                    config = deployConfig;
-                                    metadata = file.contractMetadata;
-                                });
+                                    abi = switch (file.contractMetadata) {
+                                        case (?meta) meta.abi;
+                                        case null null;
+                                    };
+                                    constructorArgs = constructorArgs;
+                                    network = network;
+                                    gasLimit = null; // Use default
+                                    value = null;
+                                };
+                                
+                                // Deploy via Chain Fusion
+                                let deploymentResult = await ChainFusion.deployContract(
+                                    deployRequest,
+                                    caller
+                                );
                                 
                                 switch (deploymentResult) {
                                     case (#Ok(deployment)) {
                                         // Track deployment
                                         addDeploymentRecord(repositoryId, deployment);
+                                        
+                                        // Update repository with last deployment
+                                        let updatedRepo = {
+                                            repo with
+                                            lastDeployment = ?deployment;
+                                            updatedAt = Time.now();
+                                        };
+                                        repositories.put(repositoryId, updatedRepo);
+                                        
                                         #Ok(deployment);
                                     };
                                     case (#Err(e)) { #Err(e); };
@@ -1411,26 +1460,30 @@ public shared({ caller }) func deleteFile(repositoryId: Text, path: Text): async
         switch (repositories.get(repositoryId)) {
             case null {};
             case (?repo) {
-                // Check each changed file
-                for (filePath in changedFiles.vals()) {
-                    switch (repo.files.get(filePath)) {
-                        case null {};
-                        case (?file) {
-                            switch (file.fileType) {
-                                case (?#SmartContract(contractInfo)) {
-                                    // Auto-deploy if configured
-                                    for (target in repo.deploymentTargets.vals()) {
-                                        if (target.chain == contractInfo.chain and target.autoDeploy) {
-                                            let _ = await deployContract(
-                                                repositoryId,
-                                                filePath,
-                                                target.chain,
-                                                ?target.config
-                                            );
+                // Check each deployment target
+                for (target in repo.deploymentTargets.vals()) {
+                    if (target.autoDeploy) {
+                        // Find contract files for this chain
+                        for (filePath in changedFiles.vals()) {
+                            switch (repo.files.get(filePath)) {
+                                case null {};
+                                case (?file) {
+                                    switch (file.fileType) {
+                                        case (?#SmartContract(contractInfo)) {
+                                            if (contractInfo.chain == target.chain) {
+                                                // Auto-deploy
+                                                let _ = await deployContract(
+                                                    repositoryId,
+                                                    filePath,
+                                                    target.chain,
+                                                    target.network,
+                                                    null
+                                                );
+                                            };
                                         };
+                                        case _ {};
                                     };
                                 };
-                                case _ {};
                             };
                         };
                     };
@@ -2188,5 +2241,199 @@ public shared({ caller }) func initializeGovernanceTokens(amount: TokenAmount): 
             };
         };
     };
+    
+    // deplyment codes
+    public query({ caller }) func getDeploymentHistory(
+        repositoryId: Text
+    ): async Result<[Types.DeploymentRecord], Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    return #Err(#Forbidden("No read permission"));
+                };
+                
+                switch (deployments.get(repositoryId)) {
+                    case null { #Ok([]) };
+                    case (?history) { #Ok(history) };
+                };
+            };
+        };
+    };
 
+    public shared func checkDeploymentStatus(
+        deploymentId: Text,
+        chain: Types.BlockchainType,
+        transactionHash: Text
+    ): async Result<Types.DeploymentStatus, Error> {
+        await ChainFusion.getDeploymentStatus(chain, transactionHash);
+    };
+
+    public shared({ caller }) func sendCrossChainMessage(
+        fromRepositoryId: Text,
+        message: CrossChainMessage
+    ): async Result<Text, Error> {
+        // Verify caller has permission
+        switch (repositories.get(fromRepositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canWriteRepository(caller, repo)) {
+                    return #Err(#Forbidden("No write permission"));
+                };
+                
+                await ChainFusion.sendCrossChainMessage(message);
+            };
+        };
+    };
+
+    public shared func getBitcoinBalance(
+        address: BitcoinAddress,
+        network: BitcoinNetwork
+    ): async Result<Satoshi, Error> {
+        await ChainFusion.getBitcoinBalance(address, network);
+    };
+
+
+    public shared({ caller }) func deriveBlockchainAddress(
+        chain: Types.BlockchainType
+    ): async Result<Text, Error> {
+        let derivationPath = [
+            Text.encodeUtf8("icphub"),
+            Principal.toBlob(caller)
+        ];
+        
+        await ChainFusion.deriveAddress(chain, derivationPath);
+    };
+
+    public shared({ caller }) func configureDeploymentTargets(
+        repositoryId: Text,
+        targets: [Types.DeploymentTarget]
+    ): async Result<Bool, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canAdminRepository(caller, repo)) {
+                    return #Err(#Forbidden("Admin permission required"));
+                };
+                
+                let updatedRepo = {
+                    repo with
+                    deploymentTargets = targets;
+                    updatedAt = Time.now();
+                };
+                
+                repositories.put(repositoryId, updatedRepo);
+                #Ok(true);
+            };
+        };
+    };
+
+    public shared({ caller }) func uploadFileWithAutoDeploy(
+        request: UploadFileRequest
+    ): async Result<FileEntry, Error> {
+        // First upload the file using existing logic
+        let uploadResult = await uploadFile(request);
+        
+        switch (uploadResult) {
+            case (#Err(e)) { #Err(e) };
+            case (#Ok(fileEntry)) {
+                // Check if it's a smart contract and auto-deploy is enabled
+                switch (fileEntry.fileType) {
+                    case (?#SmartContract(contractInfo)) {
+                        switch (repositories.get(request.repositoryId)) {
+                            case null { #Ok(fileEntry) };
+                            case (?repo) {
+                                // Check if auto-deploy is configured for this chain
+                                for (target in repo.deploymentTargets.vals()) {
+                                    if (target.chain == contractInfo.chain and target.autoDeploy) {
+                                        // Trigger async deployment (don't wait for result)
+                                        ignore deployContract(
+                                            request.repositoryId,
+                                            request.path,
+                                            target.chain,
+                                            target.network,
+                                            null
+                                        );
+                                    };
+                                };
+                                #Ok(fileEntry);
+                            };
+                        };
+                    };
+                    case _ { #Ok(fileEntry) };
+                };
+            };
+        };
+    };
+
+    public shared func verifyDeployment(
+        repositoryId: Text,
+        deploymentId: Text,
+        chain: Types.BlockchainType
+    ): async Result<Bool, Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                switch (deployments.get(repositoryId)) {
+                    case null { #Err(#NotFound("No deployments found")); };
+                    case (?history) {
+                        let deployment = Array.find<DeploymentRecord>(
+                            history,
+                            func(d) { d.id == deploymentId }
+                        );
+                        
+                        switch (deployment) {
+                            case null { #Err(#NotFound("Deployment not found")); };
+                            case (?dep) {
+                                // Verify on the blockchain
+                                switch (dep.transactionHash) {
+                                    case null { #Err(#BadRequest("No transaction hash available")); };
+                                    case (?txHash) {
+                                        let statusResult = await ChainFusion.getDeploymentStatus(chain, txHash);
+                                        switch (statusResult) {
+                                            case (#Ok(#Success)) { #Ok(true) };
+                                            case (#Ok(_)) { #Ok(false) };
+                                            case (#Err(e)) { #Err(e) };
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    public query({ caller }) func getMultiChainDeploymentStatus(
+        repositoryId: Text
+    ): async Result<[(Types.BlockchainType, ?DeploymentRecord)], Error> {
+        switch (repositories.get(repositoryId)) {
+            case null { #Err(#NotFound("Repository not found")); };
+            case (?repo) {
+                if (not Utils.canReadRepository(caller, repo)) {
+                    return #Err(#Forbidden("No read permission"));
+                };
+                
+                let results = Buffer.Buffer<(Types.BlockchainType, ?DeploymentRecord)>(repo.supportedChains.size());
+                
+                for (chain in repo.supportedChains.vals()) {
+                    // Find latest deployment for this chain
+                    let latestDeployment = switch (deployments.get(repositoryId)) {
+                        case null null;
+                        case (?history) {
+                            Array.find<DeploymentRecord>(
+                                Array.reverse(history), // Get latest first
+                                func(d) { d.chain == chain }
+                            );
+                        };
+                    };
+                    
+                    results.add((chain, latestDeployment));
+                };
+                
+                #Ok(Buffer.toArray(results));
+            };
+        };
+    };
 }
