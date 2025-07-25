@@ -520,208 +520,313 @@ module {
 
     // Detect file type and blockchain
     public func detectFileType(path: Text, content: Blob): ?Types.FileType {
-        let ext = getFileExtension(path);
-        switch (ext) {
-            case (?extension) {
-                switch (extension) {
-                    case "sol" { ?#SmartContract({ chain = #Ethereum; language = "Solidity" }) };
-                    case "mo" { ?#SmartContract({ chain = #ICP; language = "Motoko" }) };
-                    case "rs" {
-                        // Check content for blockchain-specific imports
-                        switch (Text.decodeUtf8(content)) {
-                            case (?code) {
-                                if (containsSubstring(code, "anchor_lang") or containsSubstring(code, "solana_program")) {
-                                    ?#SmartContract({ chain = #Solana; language = "Rust" })
-                                } else if (containsSubstring(code, "near_sdk")) {
-                                    ?#SmartContract({ chain = #Near; language = "Rust" })
-                                } else {
-                                    ?#Backend
-                                };
-                            };
-                            case null { ?#Other };
-                        };
-                    };
-                    case "vy" { ?#SmartContract({ chain = #Ethereum; language = "Vyper" }) };
-                    case "cairo" { ?#SmartContract({ chain = #Ethereum; language = "Cairo" }) };
-                    case "json" {
-                        let fileName = getFileName(path);
-                        if (containsSubstring(fileName, "deploy") or containsSubstring(fileName, "config")) {
-                            ?#DeploymentConfig
-                        } else {
-                            ?#Other
-                        };
-                    };
-                    case "js" { 
-                        if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
-                            ?#Test
-                        } else {
-                            ?#Frontend
-                        };
-                    };
-                    case "jsx" { 
-                        if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
-                            ?#Test
-                        } else {
-                            ?#Frontend
-                        };
-                    };
-                    case "ts" { 
-                        if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
-                            ?#Test
-                        } else {
-                            ?#Frontend
-                        };
-                    };
-                    case "tsx" { 
-                        if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
-                            ?#Test
-                        } else {
-                            ?#Frontend
-                        };
-                    };
-                    case "md" { ?#Documentation };
-                    case _ { ?#Other };
+    let ext = getFileExtension(path);
+    switch (ext) {
+        case (?extension) {
+            switch (extension) {
+                case "sol" { 
+                    ?#SmartContract({ 
+                        chain = #Ethereum; 
+                        language = "Solidity";
+                        compiler = ?"solc";
+                        version = ?"0.8.0";
+                    }) 
                 };
+                case "mo" { 
+                    ?#SmartContract({ 
+                        chain = #ICP; 
+                        language = "Motoko";
+                        compiler = ?"moc";
+                        version = ?"0.10.0";
+                    }) 
+                };
+                case "rs" {
+                    // Check content for blockchain-specific imports
+                    switch (Text.decodeUtf8(content)) {
+                        case (?code) {
+                            if (containsSubstring(code, "anchor_lang") or containsSubstring(code, "solana_program")) {
+                                ?#SmartContract({ 
+                                    chain = #Solana; 
+                                    language = "Rust";
+                                    compiler = ?"rustc";
+                                    version = ?"1.70.0";
+                                })
+                            } else if (containsSubstring(code, "near_sdk")) {
+                                ?#SmartContract({ 
+                                    chain = #Near; 
+                                    language = "Rust";
+                                    compiler = ?"rustc";
+                                    version = ?"1.70.0";
+                                })
+                            } else {
+                                ?#Backend
+                            };
+                        };
+                        case null { ?#Other };
+                    };
+                };
+                case "vy" { 
+                    ?#SmartContract({ 
+                        chain = #Ethereum; 
+                        language = "Vyper";
+                        compiler = ?"vyper";
+                        version = ?"0.3.0";
+                    }) 
+                };
+                case "cairo" { 
+                    ?#SmartContract({ 
+                        chain = #Ethereum; 
+                        language = "Cairo";
+                        compiler = ?"cairo-compile";
+                        version = ?"1.0.0";
+                    }) 
+                };
+                case "clar" { 
+                    ?#SmartContract({ 
+                        chain = #Bitcoin; 
+                        language = "Clarity";
+                        compiler = ?"clarinet";
+                        version = ?"1.0.0";
+                    }) 
+                };
+                case "move" { 
+                    ?#SmartContract({ 
+                        chain = #Solana; 
+                        language = "Move";
+                        compiler = ?"move";
+                        version = ?"1.0.0";
+                    }) 
+                };
+                case "json" {
+                    let fileName = getFileName(path);
+                    if (containsSubstring(fileName, "deploy") or containsSubstring(fileName, "config")) {
+                        ?#DeploymentConfig
+                    } else {
+                        ?#Other
+                    };
+                };
+                case "js" { 
+                    if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
+                        ?#Test
+                    } else {
+                        ?#Frontend
+                    };
+                };
+                case "jsx" { 
+                    if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
+                        ?#Test
+                    } else {
+                        ?#Frontend
+                    };
+                };
+                case "ts" { 
+                    if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
+                        ?#Test
+                    } else {
+                        ?#Frontend
+                    };
+                };
+                case "tsx" { 
+                    if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
+                        ?#Test
+                    } else {
+                        ?#Frontend
+                    };
+                };
+                case "py" { 
+                    if (containsSubstring(path, "test") or containsSubstring(path, "spec")) {
+                        ?#Test
+                    } else {
+                        ?#Backend
+                    };
+                };
+                case "md" { ?#Documentation };
+                case _ { ?#Other };
             };
-            case null { ?#Other };
         };
+        case null { ?#Other };
     };
+};
     
     // Get default chain configuration
     public func getDefaultChainConfig(chain: Types.BlockchainType): Types.ChainConfig {
-        switch (chain) {
-            case (#Ethereum) {
-                {
-                    rpcUrl = "https://eth-mainnet.g.alchemy.com/v2/";
-                    chainId = 1;
-                    explorerUrl = "https://etherscan.io";
-                    nativeCurrency = { name = "Ether"; symbol = "ETH"; decimals = 18 };
-                    gasSettings = ?{
-                        gasLimit = 3000000;
-                        maxFeePerGas = null;
-                        maxPriorityFeePerGas = null;
-                    };
-                    defaultAccount = null;
+    switch (chain) {
+        case (#Ethereum) {
+            {
+                rpcUrl = "https://eth-mainnet.g.alchemy.com/v2/";
+                chainId = 1;
+                explorerUrl = "https://etherscan.io";
+                nativeCurrency = { name = "Ether"; symbol = "ETH"; decimals = 18 };
+                gasSettings = ?{
+                    gasLimit = 3000000;
+                    maxFeePerGas = null;
+                    maxPriorityFeePerGas = null;
                 };
+                defaultAccount = null;
+                gasLimit = 21000;
+                gasPrice = 20000000000; // 20 gwei
+                blockTime = 12; // 12 seconds
+                confirmations = 6;
             };
-            case (#Solana) {
-                {
-                    rpcUrl = "https://api.mainnet-beta.solana.com";
-                    chainId = 1;
-                    explorerUrl = "https://explorer.solana.com";
-                    nativeCurrency = { name = "SOL"; symbol = "SOL"; decimals = 9 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#Solana) {
+            {
+                rpcUrl = "https://api.mainnet-beta.solana.com";
+                chainId = 1;
+                explorerUrl = "https://explorer.solana.com";
+                nativeCurrency = { name = "SOL"; symbol = "SOL"; decimals = 9 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 200000; // Compute units
+                gasPrice = 5000; // Lamports per compute unit
+                blockTime = 400; // ~400ms
+                confirmations = 32;
             };
-            case (#ICP) {
-                {
-                    rpcUrl = "https://ic0.app";
-                    chainId = 1;
-                    explorerUrl = "https://dashboard.internetcomputer.org";
-                    nativeCurrency = { name = "ICP"; symbol = "ICP"; decimals = 8 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#ICP) {
+            {
+                rpcUrl = "https://ic0.app";
+                chainId = 1;
+                explorerUrl = "https://dashboard.internetcomputer.org";
+                nativeCurrency = { name = "ICP"; symbol = "ICP"; decimals = 8 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 2000000000; // 2B cycles
+                gasPrice = 1; // 1 cycle per instruction
+                blockTime = 1; // ~1 second
+                confirmations = 1;
             };
-            case (#Polygon) {
-                {
-                    rpcUrl = "https://polygon-rpc.com";
-                    chainId = 137;
-                    explorerUrl = "https://polygonscan.com";
-                    nativeCurrency = { name = "MATIC"; symbol = "MATIC"; decimals = 18 };
-                    gasSettings = ?{
-                        gasLimit = 3000000;
-                        maxFeePerGas = null;
-                        maxPriorityFeePerGas = null;
-                    };
-                    defaultAccount = null;
+        };
+        case (#Polygon) {
+            {
+                rpcUrl = "https://polygon-rpc.com";
+                chainId = 137;
+                explorerUrl = "https://polygonscan.com";
+                nativeCurrency = { name = "MATIC"; symbol = "MATIC"; decimals = 18 };
+                gasSettings = ?{
+                    gasLimit = 3000000;
+                    maxFeePerGas = null;
+                    maxPriorityFeePerGas = null;
                 };
+                defaultAccount = null;
+                gasLimit = 21000;
+                gasPrice = 30000000000; // 30 gwei
+                blockTime = 2; // 2 seconds
+                confirmations = 10;
             };
-            case (#BinanceSmartChain) {
-                {
-                    rpcUrl = "https://bsc-dataseed.binance.org";
-                    chainId = 56;
-                    explorerUrl = "https://bscscan.com";
-                    nativeCurrency = { name = "BNB"; symbol = "BNB"; decimals = 18 };
-                    gasSettings = ?{
-                        gasLimit = 3000000;
-                        maxFeePerGas = null;
-                        maxPriorityFeePerGas = null;
-                    };
-                    defaultAccount = null;
+        };
+        case (#BinanceSmartChain) {
+            {
+                rpcUrl = "https://bsc-dataseed.binance.org";
+                chainId = 56;
+                explorerUrl = "https://bscscan.com";
+                nativeCurrency = { name = "BNB"; symbol = "BNB"; decimals = 18 };
+                gasSettings = ?{
+                    gasLimit = 3000000;
+                    maxFeePerGas = null;
+                    maxPriorityFeePerGas = null;
                 };
+                defaultAccount = null;
+                gasLimit = 21000;
+                gasPrice = 5000000000; // 5 gwei
+                blockTime = 3; // 3 seconds
+                confirmations = 15;
             };
-            case (#Arbitrum) {
-                {
-                    rpcUrl = "https://arb1.arbitrum.io/rpc";
-                    chainId = 42161;
-                    explorerUrl = "https://arbiscan.io";
-                    nativeCurrency = { name = "Ether"; symbol = "ETH"; decimals = 18 };
-                    gasSettings = ?{
-                        gasLimit = 3000000;
-                        maxFeePerGas = null;
-                        maxPriorityFeePerGas = null;
-                    };
-                    defaultAccount = null;
+        };
+        case (#Arbitrum) {
+            {
+                rpcUrl = "https://arb1.arbitrum.io/rpc";
+                chainId = 42161;
+                explorerUrl = "https://arbiscan.io";
+                nativeCurrency = { name = "Ether"; symbol = "ETH"; decimals = 18 };
+                gasSettings = ?{
+                    gasLimit = 3000000;
+                    maxFeePerGas = null;
+                    maxPriorityFeePerGas = null;
                 };
+                defaultAccount = null;
+                gasLimit = 21000;
+                gasPrice = 100000000; // 0.1 gwei (much cheaper)
+                blockTime = 1; // ~1 second
+                confirmations = 1;
             };
-            case (#Avalanche) {
-                {
-                    rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
-                    chainId = 43114;
-                    explorerUrl = "https://snowtrace.io";
-                    nativeCurrency = { name = "AVAX"; symbol = "AVAX"; decimals = 18 };
-                    gasSettings = ?{
-                        gasLimit = 3000000;
-                        maxFeePerGas = null;
-                        maxPriorityFeePerGas = null;
-                    };
-                    defaultAccount = null;
+        };
+        case (#Avalanche) {
+            {
+                rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+                chainId = 43114;
+                explorerUrl = "https://snowtrace.io";
+                nativeCurrency = { name = "AVAX"; symbol = "AVAX"; decimals = 18 };
+                gasSettings = ?{
+                    gasLimit = 3000000;
+                    maxFeePerGas = null;
+                    maxPriorityFeePerGas = null;
                 };
+                defaultAccount = null;
+                gasLimit = 21000;
+                gasPrice = 25000000000; // 25 gwei
+                blockTime = 2; // 2 seconds
+                confirmations = 5;
             };
-            case (#Near) {
-                {
-                    rpcUrl = "https://rpc.mainnet.near.org";
-                    chainId = 1;
-                    explorerUrl = "https://explorer.near.org";
-                    nativeCurrency = { name = "NEAR"; symbol = "NEAR"; decimals = 24 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#Near) {
+            {
+                rpcUrl = "https://rpc.mainnet.near.org";
+                chainId = 1;
+                explorerUrl = "https://explorer.near.org";
+                nativeCurrency = { name = "NEAR"; symbol = "NEAR"; decimals = 24 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 300000000000000; // 300 TGas
+                gasPrice = 100000000; // 0.0001 NEAR per gas
+                blockTime = 1; // ~1 second
+                confirmations = 1;
             };
-            case (#Bitcoin) {
-                {
-                    rpcUrl = "https://btc.ic0.app";
-                    chainId = 0;
-                    explorerUrl = "https://blockchain.info";
-                    nativeCurrency = { name = "Bitcoin"; symbol = "BTC"; decimals = 8 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#Bitcoin) {
+            {
+                rpcUrl = "https://btc.ic0.app";
+                chainId = 0;
+                explorerUrl = "https://blockchain.info";
+                nativeCurrency = { name = "Bitcoin"; symbol = "BTC"; decimals = 8 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 1; // Not applicable for Bitcoin
+                gasPrice = 10; // Satoshis per byte
+                blockTime = 600; // 10 minutes
+                confirmations = 6;
             };
-            case (#Cosmos) {
-                {
-                    rpcUrl = "https://cosmos-rpc.quickapi.com";
-                    chainId = 1;
-                    explorerUrl = "https://www.mintscan.io/cosmos";
-                    nativeCurrency = { name = "ATOM"; symbol = "ATOM"; decimals = 6 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#Cosmos) {
+            {
+                rpcUrl = "https://cosmos-rpc.quickapi.com";
+                chainId = 1;
+                explorerUrl = "https://www.mintscan.io/cosmos";
+                nativeCurrency = { name = "ATOM"; symbol = "ATOM"; decimals = 6 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 200000;
+                gasPrice = 1000; // uatom
+                blockTime = 7; // ~7 seconds
+                confirmations = 1;
             };
-            case (#Polkadot) {
-                {
-                    rpcUrl = "wss://rpc.polkadot.io";
-                    chainId = 0;
-                    explorerUrl = "https://polkadot.subscan.io";
-                    nativeCurrency = { name = "DOT"; symbol = "DOT"; decimals = 10 };
-                    gasSettings = null;
-                    defaultAccount = null;
-                };
+        };
+        case (#Polkadot) {
+            {
+                rpcUrl = "wss://rpc.polkadot.io";
+                chainId = 0;
+                explorerUrl = "https://polkadot.subscan.io";
+                nativeCurrency = { name = "DOT"; symbol = "DOT"; decimals = 10 };
+                gasSettings = null;
+                defaultAccount = null;
+                gasLimit = 1000000000; // Weight units
+                gasPrice = 1000000; // Planck per weight unit
+                blockTime = 6; // 6 seconds
+                confirmations = 2;
             };
         };
     };
+};
 
     // Check if file is a smart contract
     public func isSmartContract(fileType: ?Types.FileType): Bool {

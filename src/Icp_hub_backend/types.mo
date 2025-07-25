@@ -55,13 +55,15 @@ module {
     };
 
     public type SmartContractLanguage = {
-        #Motoko;
         #Solidity;
+        #Motoko;
         #Rust;
-        #Move;
-        #Clarity;
-        #Cairo;
         #Vyper;
+        #Cairo;
+        #Clarity;
+        #Michelson;
+        #Move;
+        #Plutus;
         #Wasm;
     };
 
@@ -75,7 +77,7 @@ module {
     };
 
      public type FileType = {
-        #SmartContract: { chain: BlockchainType; language: Text };
+        #SmartContract: SmartContractInfo;
         #DeploymentConfig;
         #Frontend;
         #Backend;
@@ -103,6 +105,9 @@ module {
         gasLimit: ?Nat;
         value: ?Nat;
         wallet: ?Text;
+        gasPrice: ?Nat;
+        confirmations: ?Nat;
+        timeout: ?Nat;
     };
 
     public type ContractMetadata = {
@@ -115,6 +120,14 @@ module {
         sourceFiles: [Text];
         dependencies: [Dependency];
         deploymentConfig: ?DeploymentConfig;
+        sourceMap: ?Text
+    };
+
+    public type SmartContractInfo = {
+        language: Text;
+        chain: BlockchainType;
+        compiler: ?Text;
+        version: ?Text;
     };
 
      public type ProjectType = {
@@ -155,13 +168,16 @@ module {
         nativeCurrency: { name: Text; symbol: Text; decimals: Nat };
         gasSettings: ?GasSettings;
         defaultAccount: ?Text;
+        gasLimit: Nat;
+        gasPrice: Nat;
+        blockTime: Nat;
+        confirmations: Nat;
     };
 
     public type DeploymentRecord = {
         id: Text;
         repositoryId: Text;
         commitId: Text;
-        chain: ChainType;
         contractAddress: ?Text;
         transactionHash: ?Text;
         deployedAt: Int;
@@ -170,6 +186,7 @@ module {
         gasUsed: ?Nat;
         cost: ?Nat;
         artifacts: ?DeploymentArtifacts;
+        chain: BlockchainType;
     };
 
 
@@ -381,9 +398,10 @@ module {
     };
 
     public type DeploymentTarget = {
-        chain: ChainType;
-        network: Text; // mainnet, testnet, etc.
-        contractAddress: ?Text;
+        chain: BlockchainType;
+        network: NetworkConfig;
+        autoDeploy: Bool;
+        config: DeploymentConfig;
     };
 
     // CI/CD Pipeline types

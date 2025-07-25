@@ -2,12 +2,16 @@
   "canisters": {
     "Icp_hub_backend": {
       "main": "src/Icp_hub_backend/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "dependencies": []
     },
     "Icp_hub_frontend": {
       "dependencies": [
         "Icp_hub_backend"
       ],
+      "frontend": {
+        "entrypoint": "src/Icp_hub_frontend/src/index.html"
+      },
       "source": [
         "src/Icp_hub_frontend/dist"
       ],
@@ -18,7 +22,19 @@
   "defaults": {
     "build": {
       "args": "",
-      "packtool": ""
+      "packtool": "mops sources"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "providers": [
+        "https://ic0.app"
+      ],
+      "type": "persistent"
     }
   },
   "output_env_file": ".env",

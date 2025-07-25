@@ -447,6 +447,8 @@ module CollaboratorManager {
                         case (#Read) { readOnly += 1; };
                         case (#Write) { writeAccess += 1; };
                         case (#Admin) { adminAccess += 1; };
+                        case (#Owner) { adminAccess += 1; };
+                        case (#Deploy(_)) { writeAccess += 1; };
                     };
                 };
 
