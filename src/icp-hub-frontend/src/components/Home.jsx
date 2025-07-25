@@ -6,38 +6,14 @@ import ThreeBackground from './ThreeBackground'
 function Home() {
   const [hoveredCard, setHoveredCard] = useState(null)
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const [animatedStats, setAnimatedStats] = useState({
-    chains: 0,
-    projects: 0,
-    developers: 0,
-    lines: 0
-  })
 
-  // Animate stats on mount
-  useEffect(() => {
-    const targets = { chains: 6, projects: 75000, developers: 40000, lines: 500000000 }
-    const duration = 2000
-    const steps = 60
-    const stepTime = duration / steps
-
-    let step = 0
-    const timer = setInterval(() => {
-      step++
-      const progress = step / steps
-      const easeOut = 1 - Math.pow(1 - progress, 3)
-      
-      setAnimatedStats({
-        chains: Math.floor(targets.chains * easeOut),
-        projects: Math.floor(targets.projects * easeOut),
-        developers: Math.floor(targets.developers * easeOut),
-        lines: Math.floor(targets.lines * easeOut)
-      })
-
-      if (step >= steps) clearInterval(timer)
-    }, stepTime)
-
-    return () => clearInterval(timer)
-  }, [])
+  // Static stats - no animation
+  const stats = {
+    chains: 6,
+    projects: 75000,
+    developers: 40000,
+    lines: 500000000
+  }
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -198,28 +174,23 @@ function Home() {
                   <ArrowRight size={16} />
                   <div className="btn-glow"></div>
                 </Link>
-                <button className="btn-secondary enhanced-btn">
-                  <Play size={16} />
-                  Watch Demo
-                  <div className="btn-glow"></div>
-                </button>
               </div>
               
               <div className="hero-stats">
                 <div className="stat">
-                  <span className="stat-number">{animatedStats.chains}+</span>
+                  <span className="stat-number">{stats.chains}+</span>
                   <span className="stat-label">Blockchain Networks</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-number">{formatNumber(animatedStats.projects)}+</span>
+                  <span className="stat-number">{formatNumber(stats.projects)}+</span>
                   <span className="stat-label">Cross-Chain Projects</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-number">{formatNumber(animatedStats.developers)}+</span>
+                  <span className="stat-number">{formatNumber(stats.developers)}+</span>
                   <span className="stat-label">Web3 Developers</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-number">{formatNumber(animatedStats.lines)}+</span>
+                  <span className="stat-number">{formatNumber(stats.lines)}+</span>
                   <span className="stat-label">Lines of Code</span>
                 </div>
               </div>
