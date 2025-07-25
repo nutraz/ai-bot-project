@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useWallet } from '../services/walletService.jsx'
-import { Home, Folder, Users, User, Plus, Wallet, LogOut, Settings, ChevronDown, DollarSign, Vote, TrendingUp } from 'lucide-react'
+import { Home, Folder, Users, User, Plus, Wallet, LogOut, Settings, ChevronDown, DollarSign, Vote, TrendingUp, FileText } from 'lucide-react'
 import NewRepositoryModal from './NewRepositoryModal'
 import WalletConnectionModal from './WalletConnectionModal'
 
@@ -23,9 +23,12 @@ function Header() {
   } = useWallet()
   
   const navigate = useNavigate()
+  const location = useLocation()
   const [isNewRepoModalOpen, setIsNewRepoModalOpen] = useState(false)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
+
+  const isHomePage = location.pathname === '/'
 
   const handleConnectWallet = () => {
     setError(null)
@@ -73,7 +76,16 @@ function Header() {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo">
-              <span className="logo-text">OpenKey</span>
+              {isHomePage ? (
+                <img 
+                  src="/OPENKEY.png" 
+                  alt="OpenKey" 
+                  className="logo-image"
+                  style={{ height: '20x', width: '100px' }}
+                />
+              ) : (
+                <span className="logo-text">OpenKey</span>
+              )}
             </Link>
             
             <nav className="nav">
@@ -99,6 +111,15 @@ function Header() {
                 <Vote size={18} />
                 <span>Governance</span>
               </Link>
+              <a 
+                href="https://github.com/Icphub-web3/Icp_hub/blob/main/README.md" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="nav-link"
+              >
+                <FileText size={18} />
+                <span>Documentation</span>
+              </a>
               {isConnected && (
                 <Link to="/tokens" className="nav-link">
                   <TrendingUp size={18} />
