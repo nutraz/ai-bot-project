@@ -100,7 +100,7 @@ function WalletConnectionModal({ isOpen, onClose }) {
         </div>
 
         <div className="wallet-modal-description">
-          <p>Connect your Plug wallet to start using GitForWeb3 on the Internet Computer.</p>
+                          <p>Connect your Plug wallet to start using OpenKey on the Internet Computer.</p>
         </div>
 
         {connectionError && (
