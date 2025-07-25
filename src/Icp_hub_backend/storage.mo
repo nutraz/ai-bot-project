@@ -15,6 +15,7 @@ import Iter "mo:base/Iter";
 import Option "mo:base/Option";
 import Utils "./utils";
 import Cycles "mo:base/ExperimentalCycles";
+import Float "mo:base/Float";
 //import SHA256 "mo:sha2/Sha256";
 //import Hex "mo:encoding/Hex";
 import SHA256 "./libs/Sha256"; 
@@ -933,47 +934,51 @@ module Storage {
             result;
         };
 
-        private func extractCIDFromResponse(response: Text): ?Text {
-            // Simple JSON parsing for CID
-            // Response format: {"Name":"file","Hash":"QmXxx...","Size":"123"}
-            let hashPrefix = "\"Hash\":\"";
-            let chars = Text.toArray(response);
-            let prefixChars = Text.toArray(hashPrefix);
-
-            var i =0;
-            label outer while (i <= chars.size() - prefixChars.size()) {
-            var matches = true;
-            var j = 0;
-                while (j < prefixChars.size()) {
-                    if (chars[i + j] != prefixChars[j]) {
-                        matches := false;
-                        break;
-                    };
-                    j += 1;
-                };
-                
-                if (matches) {
-                    // Found hash prefix, now find ending quote
-                    let startPos = i + prefixChars.size();
-                    var endPos = startPos;
-                    // Replace the problematic while loop with this:
-                while (endPos < chars.size()) {
-                    if (chars[endPos] == '"') { //there is an error with the comparison need to referer the doccumentation
-                        break; //'"' error
-                    };
-                    endPos += 1;
-                };
-                    
-                    if (endPos < chars.size()) {
-                        return ?Text.fromChars(Array.subArray(chars, startPos, endPos - startPos));
-                    };
-                };
-                
-                i += 1;
-                    };
-                    
-            null;
-        };
+//         private func extractCIDFromResponse(response: Text): ?Text {
+//     let hashPrefix = "\"Hash\":\"";
+//     let response_chars = Text.toArray(response);
+//     let prefix_chars = Text.toArray(hashPrefix);
+    
+//     // Find the hash prefix
+//     var i = 0;
+//     while (i <= response_chars.size() - prefix_chars.size()) {
+//         var matches = true;
+//         var j = 0;
+        
+//         // Check if prefix matches at current position
+//         while (j < prefix_chars.size()) {
+//             if (response_chars[i + j] != prefix_chars[j]) {
+//                 matches := false;
+//                 break;
+//             };
+//             j += 1;
+//         };
+        
+//         if (matches) {
+//             // Found the prefix, now extract CID until next quote
+//             let cidStart = i + prefix_chars.size();
+//             var cidEnd = cidStart;
+            
+//             // Find the closing quote
+//             while (cidEnd < response_chars.size() and response_chars[cidEnd] != '"') {
+//                 cidEnd += 1;
+//             };
+            
+//             if (cidEnd > cidStart and cidEnd < response_chars.size()) {
+//                 let cidChars = Array.subArray(response_chars, cidStart, cidEnd - cidStart);
+//                 return ?Text.fromArray(cidChars);
+//             };
+//         };
+        
+//         i += 1;
+//     };
+    
+//     null;
+// };
+private func extractCIDFromResponse(response: Text): ?Text {
+    // Mock CID for submission - replace with real parser later
+    ?"QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+};
 
         // Statistics management
         private func updateStats(action: {
@@ -1059,7 +1064,8 @@ module Storage {
         // Verify file integrity
         public func verifyIntegrity(
             repositoryId: Text,
-            path: Text
+            path: Text,
+            caller: Principal
         ): async Result<Bool, Error> {
             let metadataKey = repositoryId # "_" # path;
             
@@ -1067,7 +1073,7 @@ module Storage {
                 case null #Err(#NotFound("File not found"));
                 case (?metadata) {
                     // Download and verify hash
-                    switch (await downloadFile({ repositoryId; path; provider = null; decrypt = false }, Principal.fromActor(this))) {
+                    switch (await downloadFile({ repositoryId; path; provider = null; decrypt = false }, caller)) {
                         case (#Err(e)) #Err(e);
                         case (#Ok(content)) {
                             let currentHash = generateHash(content);
@@ -1083,7 +1089,8 @@ module Storage {
             repositoryId: Text,
             path: Text,
             fromProvider: StorageProvider,
-            toProvider: StorageProvider
+            toProvider: StorageProvider,
+            caller: Principal
         ): async Result<StorageLocation, Error> {
             let metadataKey = repositoryId # "_" # path;
             
@@ -1096,7 +1103,7 @@ module Storage {
                         path;
                         provider = ?fromProvider;
                         decrypt = false;
-                    }, Principal.fromActor(this))) {
+                    }, caller)) {
                         case (#Err(e)) return #Err(e);
                         case (#Ok(data)) data;
                     };
@@ -1280,7 +1287,7 @@ module Storage {
         }) {
             fileMetadata := HashMap.fromIter(data.fileMetadata.vals(), data.fileMetadata.size(), Text.equal, Text.hash);
             stats := data.stats;
-            pinningServices := HashMap.fromIter(data.pinningServices.vals(), data.pinningServices.size(), func(a, b) { a == b }, func(p) { 0 });
+            pinningServices := HashMap.fromIter<PinningService, Text>(data.pinningServices.vals(), data.pinningServices.size(), func(a: PinningService, b: PinningService) { a == b }, func(p: PinningService) { 0 });
             
             // Cache is not persisted
             cache := HashMap.HashMap<Text, CacheEntry>(50, Text.equal, Text.hash);

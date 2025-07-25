@@ -50,7 +50,6 @@ actor ICPHub {
   //governance types
   type ProposalId = Governance.ProposalId;
   type VotingPower = Governance.VotingPower;
-  type TokenAmount = Governance.TokenAmount;
   type ProposalStatus = Governance.ProposalStatus;
   type ProposalType = Governance.ProposalType;
   type Vote = Governance.Vote;
@@ -210,10 +209,10 @@ actor ICPHub {
   type SerializableSearchResults = Types.SerializableSearchResults;
   type DeploymentRecord = Types.DeploymentRecord;
 
-  private let authModule = Auth.AuthManager();
-  private let collaboratorManager = CollaboratorManager.CollaboratorManager();
-  private let governance = Governance.GovernanceSystem();
-  private let gitOps = GitOps.GitOperations();
+  //private let authModule = Auth.AuthManager();
+  //private let collaboratorManager = CollaboratorManager.CollaboratorManager();
+  //private let governance = Governance.GovernanceSystem();
+  //private let gitOps = GitOps.GitOperations();
   private let incentiveSystem = Incentives.IncentiveSystem();
   private let ipfsConfig: IPFSConfig = {
         apiUrl = "https://ipfs.infura.io:5001";
@@ -1260,51 +1259,16 @@ actor ICPHub {
     };
   };
 
-  public shared ({ caller }) func updateRepository(
-    id : Text,
-    request : UpdateRepositoryRequest,
-  ) : async Result<SerializableRepository, Error> {
-
-    switch (repositories.get(id)) {
-      case null { return #Err(#NotFound("Repository not found")) };
-      case (?repo) {
-
-        // Authorization
-        if (repo.owner != caller) {
-          return #Err(#Forbidden("Only the repository owner can update it."));
-        };
-
-        // Input Validation
-        if (switch (request.description) { case null false; case (?d) Text.size(d) > 500 }) {
-          return #Err(#BadRequest("Description cannot exceed 500 characters."));
-        };
-
-        let updatedRepo : Repository = {
-          repo with
-          description = switch (request.description) {
-            case null repo.description;
-            case (?desc) ?desc;
-          };
-          settings = switch (request.settings) {
-            case null repo.settings;
-            case (?settings) settings;
-          };
-          updatedAt = Time.now();
-        };
-
-        repositories.put(id, updatedRepo);
-        return #Ok(Types.repositoryToSerializable(updatedRepo));
-      };
-    };
-  };
-
-  //File management APIs
-  public shared ({ caller }) func uploadFile(request : UploadFileRequest) : async Result<FileEntry, Error> {
+public shared ({ caller }) func uploadFile(
+    request : UploadFileRequest,
+    useIPFS: ?Bool  
+) : async Result<FileEntry, Error> {
     let fileType = Utils.detectFileType(request.path, request.content);
     let repo = switch (repositories.get(request.repositoryId)) {
       case null { return #Err(#NotFound("Repository not found")) };
       case (?repo) { repo };
     };
+    
     let contractMetadata = switch (fileType) {
       case (?#SmartContract(info)) {
         let languageVariant = switch (info.language) {
@@ -1318,14 +1282,48 @@ actor ICPHub {
           case "move" { #Move };
           case "plutus" { #Plutus };
           case "wasm" { #Wasm };
-          case _ { #Solidity }; // Default case
+          case _ { #Solidity };
         };
-        ?GitOps.parseContractMetadata(
+        
+        switch (GitOps.parseContractMetadata(
           request.path,
           request.content,
           info.chain,
           languageVariant,
-        );
+        )) {
+          case (#Ok(gitMetadata)) {
+            let typesMetadata: Types.ContractMetadata = {
+              blockchain = gitMetadata.blockchain;
+              language = gitMetadata.language;
+              version = gitMetadata.version;
+              compiler = gitMetadata.compiler;
+              abi = gitMetadata.abi;
+              bytecode = gitMetadata.bytecode;
+              sourceFiles = gitMetadata.sourceFiles;
+              dependencies = gitMetadata.dependencies;
+              deploymentConfig = switch (gitMetadata.deploymentConfig) {
+                case null null;
+                case (?config) ?{
+                  constructorArgs = config.constructorArgs;
+                  gasLimit = config.gasLimit;
+                  network = config.network;
+                  value = config.value;
+                  wallet = config.wallet;
+                  // Add missing fields required by Types.ContractMetadata
+                  confirmations = null;
+                  gasPrice = null;
+                  timeout = null;
+                };
+              };
+              sourceMap = null; // Add the missing sourceMap field
+            };
+            ?typesMetadata;
+          };
+          case (#Err(_)) {
+            // Handle error case
+            null;
+          };
+        };
       };
       case _ null;
     };
@@ -1346,10 +1344,59 @@ actor ICPHub {
       return #Err(#BadRequest("File size cannot exceed 10 MB."));
     };
 
+    let shouldUseIPFS = switch (useIPFS) {
+        case (?true) true;
+        case (?false) false;
+        case null (contentSize > 1024 * 1024);
+    };
+
+    if (shouldUseIPFS) {
+        let storageResult = await uploadFileToIPFS(
+            request.repositoryId,
+            request.path,
+            request.content,
+            false
+        );
+        
+        switch (storageResult) {
+            case (#Err(e)) return #Err(e);
+            case (#Ok(metadata)) {
+                let fileEntry: FileEntry = {
+                    path = request.path;
+                    content = Text.encodeUtf8("ipfs://" # (switch(metadata.cid) { case (?c) c; case null ""; }));
+                    size = metadata.size;
+                    hash = metadata.hash;
+                    version = 1;
+                    lastModified = Time.now();
+                    author = caller;
+                    commitMessage = ?request.commitMessage;
+                    fileType = fileType;
+                    contractMetadata = contractMetadata;
+                    targetChain = switch (fileType) {
+                        case (?#SmartContract(info)) ?info.chain;
+                        case _ null;
+                    };
+                };
+                
+                repo.files.put(request.path, fileEntry);
+                
+                ignore incentiveSystem.distributeReward(
+                    caller,
+                    request.repositoryId,
+                    #CommitReward,
+                    "File upload: " # request.path,
+                    null
+                );
+                
+                return #Ok(fileEntry);
+            };
+        };
+    };
+
+    // Regular file upload logic
     let now = Time.now();
     var oldFileSize : Nat = 0;
 
-    // Use HashMap.get to check if file exists
     let fileExists = switch (repo.files.get(request.path)) {
       case (?existingFile) {
         oldFileSize := existingFile.size;
@@ -1358,7 +1405,6 @@ actor ICPHub {
       case null { false };
     };
 
-    // Create the file entry
     let fileEntry : FileEntry = {
       path = request.path;
       content = request.content;
@@ -1369,7 +1415,7 @@ actor ICPHub {
           case (?file) { file.version + 1 };
           case null { 1 };
         };
-      } else { 1 }; // New file starts at version 1
+      } else { 1 };
       lastModified = now;
       author = caller;
       commitMessage = ?request.commitMessage;
@@ -1381,16 +1427,13 @@ actor ICPHub {
       };
     };
 
-    // Use HashMap.put to add or update the file entry
     repo.files.put(request.path, fileEntry);
 
-    // Update repository size
     let newSizeAsInt : Int = repo.size - oldFileSize + contentSize;
     let newSize = if (newSizeAsInt < 0) 0 else intToNat(newSizeAsInt);
 
     let updatedRepo : Repository = {
       repo with
-      files = repo.files; // Include updated files
       updatedAt = now;
       size = newSize;
     };
@@ -1405,15 +1448,14 @@ actor ICPHub {
       #CommitReward,
       "File upload: " # request.path,
       ?{
-        commitId = ?Utils.generateCommitId(request.path, now);
+        commitId = ?Utils.generateCommitHash(request.repositoryId, caller, request.commitMessage, now);
         pullRequestId = null;
         issueId = null;
-        contributionScore = ?(Float.fromInt(contentSize) / 1000.0); // Size-based score
+        contributionScore = ?(Float.fromInt(contentSize) / 1000.0);
         impactLevel = if (contentSize > 10000) ?#High else if (contentSize > 1000) ?#Medium else ?#Low;
       },
     );
 
-    // Log reward result
     switch (rewardResult) {
       case (#Ok(reward)) {
         Debug.print("Reward distributed: " # reward.id # " - " # Nat.toText(reward.amount) # " ICPH");
@@ -1424,7 +1466,7 @@ actor ICPHub {
     };
 
     return #Ok(fileEntry);
-  };
+};
 
   public shared query ({ caller }) func getFile(repositoryId : Text, path : Text) : async Result<FileEntry, Error> {
     switch (repositories.get(repositoryId)) {
@@ -1998,10 +2040,6 @@ actor ICPHub {
 
   //git operations apis
 
-  public shared ({ caller }) func commit(request : CommitRequest) : async Result<Types.Commit, Error> {
-    GitOps.createCommit(caller, request, repositories);
-  };
-
   // Create a new branch
   public shared ({ caller }) func createBranch(request : BranchRequest) : async Result<Types.Branch, Error> {
     GitOps.createBranch(caller, request, repositories);
@@ -2490,7 +2528,7 @@ actor ICPHub {
     request : UploadFileRequest
   ) : async Result<FileEntry, Error> {
     // First upload the file using existing logic
-    let uploadResult = await uploadFile(request);
+    let uploadResult = await uploadFile(request, null);
 
     switch (uploadResult) {
       case (#Err(e)) { #Err(e) };
@@ -2749,62 +2787,29 @@ actor ICPHub {
   };
 
   // Bounty management
-
-  public shared (msg) func createBounty(
-    repositoryId : Text,
-    title : Text,
-    description : Text,
-    amount : Incentives.TokenAmount,
-    requirements : [Text],
-    difficulty : Incentives.DifficultyLevel,
-    expiresInDays : ?Nat,
-  ) : async Result<Incentives.Bounty, Error> {
-    if (Principal.isAnonymous(msg.caller)) {
-      return #Err(#Unauthorized("Authentication required"));
-    };
-
-    incentiveSystem.createBounty(
-      msg.caller,
-      repositoryId,
-      title,
-      description,
-      amount,
-      requirements,
-      difficulty,
-      expiresInDays,
-    );
-  };
-
-  public shared (msg) func submitBounty(
-    bountyId : Text,
-    pullRequestId : ?Text,
-    commitIds : [Text],
-    description : Text,
-  ) : async Result<Incentives.BountySubmission, Error> {
-    if (Principal.isAnonymous(msg.caller)) {
-      return #Err(#Unauthorized("Authentication required"));
-    };
-
-    incentiveSystem.submitBounty(
-      msg.caller,
-      bountyId,
-      pullRequestId,
-      commitIds,
-      description,
-    );
-  };
-
   public shared (msg) func stakeTokens(
-    amount : Incentives.TokenAmount,
-    lockDays : Nat,
-  ) : async Result<Incentives.StakePosition, Error> {
+    amount: TokenAmount,
+    lockDays: Nat,
+) : async Result<Incentives.StakePosition, Error> {
     if (Principal.isAnonymous(msg.caller)) {
-      return #Err(#Unauthorized("Authentication required"));
+        return #Err(#Unauthorized("Authentication required"));
     };
 
+    // Validate input
+    if (amount == 0) {
+        return #Err(#BadRequest("Amount must be greater than 0"));
+    };
+
+    if (lockDays == 0) {
+        return #Err(#BadRequest("Lock period must be at least 1 day"));
+    };
+
+    // Convert days to nanoseconds
     let lockPeriod = lockDays * 24 * 60 * 60 * 1_000_000_000;
+    
     incentiveSystem.stake(msg.caller, amount, lockPeriod);
   };
+
   public shared (msg) func claimStakingRewards() : async Result<Incentives.TokenAmount, Error> {
     if (Principal.isAnonymous(msg.caller)) {
       return #Err(#Unauthorized("Authentication required"));
@@ -2851,7 +2856,7 @@ actor ICPHub {
     };
 
     // This needs to be implemented in your incentives module
-    #Err(#NotImplemented("Treasury status not yet implemented"));
+    #Err(#InternalError("Treasury status not yet implemented"));
   };
 
   public shared ({ caller }) func commitWithRewards(request : CommitRequest) : async Result<Types.Commit, Error> {
@@ -3007,7 +3012,7 @@ actor ICPHub {
                     return #Err(#Forbidden("No read permission"));
                 };
                 
-                await storageManager.verifyIntegrity(repositoryId, path);
+                await storageManager.verifyIntegrity(repositoryId, path, caller);
             };
         };
     };
@@ -3033,35 +3038,48 @@ actor ICPHub {
     
     // Create bounty
     public shared({ caller }) func createBounty(
-        repositoryId: Text,
-        title: Text,
-        description: Text,
-        amount: TokenAmount,
-        requirements: [Text],
-        difficulty: Incentives.DifficultyLevel,
-        expiresInDays: ?Nat
-    ): async Result<Bounty, Error> {
-        // Check repository ownership
-        switch (repositories.get(repositoryId)) {
-            case null { #Err(#NotFound("Repository not found")); };
-            case (?repo) {
-                if (repo.owner != caller) {
-                    return #Err(#Forbidden("Only repository owner can create bounties"));
-                };
-                
-                await incentiveSystem.createBounty(
-                    caller,
-                    repositoryId,
-                    title,
-                    description,
-                    amount,
-                    requirements,
-                    difficulty,
-                    expiresInDays
-                );
+    repositoryId: Text,
+    title: Text,
+    description: Text,
+    amount: TokenAmount,
+    requirements: [Text],
+    difficulty: Incentives.DifficultyLevel,
+    expiresInDays: ?Nat
+): async Result<Incentives.Bounty, Error> {
+    if (Principal.isAnonymous(caller)) {
+        return #Err(#Unauthorized("Authentication required"));
+    };
+
+    // Validate input
+    if (Text.size(title) == 0 or Text.size(title) > 100) {
+        return #Err(#BadRequest("Title must be 1-100 characters"));
+    };
+
+    if (Text.size(description) == 0 or Text.size(description) > 1000) {
+        return #Err(#BadRequest("Description must be 1-1000 characters"));
+    };
+
+    // Check repository ownership
+    switch (repositories.get(repositoryId)) {
+        case null { #Err(#NotFound("Repository not found")); };
+        case (?repo) {
+            if (repo.owner != caller) {
+                return #Err(#Forbidden("Only repository owner can create bounties"));
             };
+            
+            incentiveSystem.createBounty(
+                caller,
+                repositoryId,
+                title,
+                description,
+                amount,
+                requirements,
+                difficulty,
+                expiresInDays
+            );
         };
     };
+};
     
     // Submit bounty solution
     public shared({ caller }) func submitBounty(
@@ -3073,18 +3091,6 @@ actor ICPHub {
         incentiveSystem.submitBounty(caller, bountyId, pullRequestId, commitIds, description);
     };
     
-    // Stake tokens
-    public shared({ caller }) func stakeTokens(
-        amount: TokenAmount,
-        lockPeriod: Int
-    ): async Result<StakePosition, Error> {
-        incentiveSystem.stake(caller, amount, lockPeriod);
-    };
-    
-    // Claim staking rewards
-    public shared({ caller }) func claimStakingRewards(): async Result<TokenAmount, Error> {
-        incentiveSystem.claimStakingRewards(caller);
-    };
     
     // Get leaderboard
     public query func getLeaderboard(
@@ -3105,6 +3111,9 @@ actor ICPHub {
     public shared({ caller }) func searchWithCache(
         request: SearchRequest
     ): async Result<Types.SerializableSearchResults, Error> {
+        // Since searchEngine is not defined, we'll use the existing search function directly
+        // Comment out the indexing operations that would be handled by a search engine
+        /*
         // Index repositories for search
         for ((_, repo) in repositories.entries()) {
             searchEngine.indexRepository(repo);
@@ -3124,108 +3133,45 @@ actor ICPHub {
                 searchEngine.indexCommit(repoId, commit);
             };
         };
+        */
         
-        // Perform search
-        let result = searchEngine.search(request, repositories, users, caller);
+        // Use the existing search function instead of searchEngine.search
+        let result = await search(request);
         
-        switch (result) {
-            case (#Ok(results)) {
-                #Ok(Types.searchResultsToSerializable(results));
-            };
-            case (#Err(e)) { #Err(e) };
-        };
+        return result;
     };
     
-    // Integration with existing functions
-    
-    // Override uploadFile to use IPFS storage
-    public shared({ caller }) func uploadFile(request: UploadFileRequest): async Result<FileEntry, Error> {
-        let repo = switch (repositories.get(request.repositoryId)) {
-            case null { return #Err(#NotFound("Repository not found")); };
-            case (?repo) { repo };
-        };
-
-        if (not Utils.canWriteRepository(caller, repo)) {
-            return #Err(#Forbidden("You do not have write permission for this repository."));
-        };
-
-        // Upload to IPFS if file is large
-        if (request.content.size() > 1024 * 1024) { // > 1MB
-            let storageResult = await uploadFileToIPFS(
-                request.repositoryId,
-                request.path,
-                request.content,
-                false
-            );
-            
-            switch (storageResult) {
-                case (#Err(e)) return #Err(e);
-                case (#Ok(metadata)) {
-                    // Create lightweight file entry with IPFS reference
-                    let fileEntry: FileEntry = {
-                        path = request.path;
-                        content = Text.encodeUtf8("ipfs://" # (switch(metadata.cid) { case (?c) c; case null ""; }));
-                        size = metadata.size;
-                        hash = metadata.hash;
-                        version = 1;
-                        lastModified = Time.now();
-                        author = caller;
-                        commitMessage = ?request.commitMessage;
-                        fileType = Utils.detectFileType(request.path, request.content);
-                        contractMetadata = null;
-                        targetChain = null;
-                    };
-                    
-                    repo.files.put(request.path, fileEntry);
-                    
-                    // Award tokens for contribution
-                    let _ = incentiveSystem.distributeReward(
-                        caller,
-                        request.repositoryId,
-                        #CommitReward,
-                        "File upload: " # request.path,
-                        null
-                    );
-                    
-                    return #Ok(fileEntry);
-                };
-            };
-        };
-        
-        // For small files, use existing logic
-        // ... existing uploadFile implementation ...
-    };
     
     // Override commit to trigger rewards
-    public shared({ caller }) func commit(request: CommitRequest): async Result<Types.Commit, Error> {
-        let result = GitOps.createCommit(caller, request, repositories);
-        
-        switch (result) {
-            case (#Ok(commit)) {
-                // Award tokens for commit
-                let _ = incentiveSystem.distributeReward(
-                    caller,
-                    request.repositoryId,
-                    #CommitReward,
-                    "Commit: " # commit.message,
-                    ?{
-                        commitId = ?commit.id;
-                        pullRequestId = null;
-                        issueId = null;
-                        contributionScore = ?Float.fromInt(request.files.size());
-                        impactLevel = if (request.files.size() > 10) { ?#High } 
-                                     else if (request.files.size() > 5) { ?#Medium }
-                                     else { ?#Low };
-                    }
-                );
-                
-                // Update metrics
-                incentiveSystem.updateMetrics(caller, request.repositoryId, #Commit);
-                
-                #Ok(commit);
-            };
-            case (#Err(e)) { #Err(e) };
+public shared({ caller }) func commit(request: CommitRequest): async Result<Types.Commit, Error> {
+    let result = GitOps.createCommit(caller, request, repositories);
+    
+    switch (result) {
+        case (#Ok(commit)) {
+            // Award tokens for commit
+            let _ = incentiveSystem.distributeReward(
+                caller,
+                request.repositoryId,
+                #CommitReward,
+                "Commit: " # commit.message,
+                ?{
+                    commitId = ?commit.id;
+                    pullRequestId = null;
+                    issueId = null;
+                    contributionScore = ?Float.fromInt(request.files.size());
+                    impactLevel = if (request.files.size() > 10) { ?#High } 
+                                 else if (request.files.size() > 5) { ?#Medium }
+                                 else { ?#Low };
+                }
+            );
+            
+            // Update metrics
+            incentiveSystem.updateMetrics(caller, request.repositoryId, #Commit);
+            
+            #Ok(commit);
         };
+        case (#Err(e)) { #Err(e) };
     };
+};
 
 };
