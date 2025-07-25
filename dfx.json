@@ -2,8 +2,7 @@
   "canisters": {
     "Icp_hub_backend": {
       "main": "src/Icp_hub_backend/main.mo",
-      "type": "motoko",
-      "dependencies": []
+      "type": "motoko"
     },
     "Icp_hub_frontend": {
       "dependencies": [
