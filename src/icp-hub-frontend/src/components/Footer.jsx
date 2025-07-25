@@ -27,7 +27,7 @@ function Footer() {
           <div className="footer-content">
             {/* Brand Section */}
             <div className="footer-brand">
-              <h3 className="footer-logo">GitForWeb3</h3>
+              <h3 className="footer-logo">OpenKey</h3>
               <p className="footer-tagline">
                 The ultimate multichain development platform connecting all blockchain ecosystems
               </p>
@@ -56,16 +56,16 @@ function Footer() {
 
               {/* Social Links */}
               <div className="footer-social">
-                <a href="https://github.com/gitforweb3" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <a href="https://github.com/openkey" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                   <Github size={20} />
                 </a>
-                <a href="https://twitter.com/gitforweb3" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                <a href="https://twitter.com/openkey" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
                   <Twitter size={20} />
                 </a>
-                <a href="https://discord.gg/gitforweb3" target="_blank" rel="noopener noreferrer" aria-label="Discord">
+                <a href="https://discord.gg/openkey" target="_blank" rel="noopener noreferrer" aria-label="Discord">
                   <MessageSquare size={20} />
                 </a>
-                <a href="https://t.me/gitforweb3" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                <a href="https://t.me/openkey" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
                   <MessageCircle size={20} />
                 </a>
               </div>
@@ -164,7 +164,7 @@ function Footer() {
         <div className="container">
           <div className="footer-bottom-content">
             <div className="footer-copyright">
-              <p>&copy; 2024 GitForWeb3. All rights reserved.</p>
+              <p>&copy; 2024 OpenKey. All rights reserved.</p>
               <p className="footer-tagline-small">Building the multichain future, one project at a time.</p>
             </div>
             

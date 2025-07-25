@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useWallet } from '../services/walletService.jsx'
-import { Home, Folder, Users, User, Plus, Wallet, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { Home, Folder, Users, User, Plus, Wallet, LogOut, Settings, ChevronDown, DollarSign, Vote, TrendingUp } from 'lucide-react'
 import NewRepositoryModal from './NewRepositoryModal'
 import WalletConnectionModal from './WalletConnectionModal'
 
@@ -73,7 +73,7 @@ function Header() {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo">
-              <span className="logo-text">GitForWeb3</span>
+              <span className="logo-text">OpenKey</span>
             </Link>
             
             <nav className="nav">
@@ -81,18 +81,28 @@ function Header() {
                 <Home size={18} />
                 <span>Home</span>
               </Link>
+              {isConnected && (
+                <Link to="/dashboard" className="nav-link">
+                  <Settings size={18} />
+                  <span>Dashboard</span>
+                </Link>
+              )}
               <Link to="/repositories" className="nav-link">
                 <Folder size={18} />
                 <span>Repositories</span>
               </Link>
-              <Link to="/community" className="nav-link">
-                <Users size={18} />
-                <span>Community</span>
+              <Link to="/bounties" className="nav-link">
+                <DollarSign size={18} />
+                <span>Bounties</span>
+              </Link>
+              <Link to="/governance" className="nav-link">
+                <Vote size={18} />
+                <span>Governance</span>
               </Link>
               {isConnected && (
-                <Link to="/profile" className="nav-link">
-                  <User size={18} />
-                  <span>Profile</span>
+                <Link to="/tokens" className="nav-link">
+                  <TrendingUp size={18} />
+                  <span>Tokens</span>
                 </Link>
               )}
             </nav>
@@ -194,6 +204,28 @@ function Header() {
                         >
                           <Folder size={16} />
                           Your Repositories
+                        </button>
+
+                        <button 
+                          className="wallet-menu-item"
+                          onClick={() => {
+                            navigate('/deploy')
+                            setIsWalletMenuOpen(false)
+                          }}
+                        >
+                          <Settings size={16} />
+                          Deployments
+                        </button>
+
+                        <button 
+                          className="wallet-menu-item"
+                          onClick={() => {
+                            navigate('/storage')
+                            setIsWalletMenuOpen(false)
+                          }}
+                        >
+                          <Folder size={16} />
+                          Storage
                         </button>
                         
                         <button 

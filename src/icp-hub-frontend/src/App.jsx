@@ -2,11 +2,18 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { WalletProvider, useWallet } from './services/walletService.jsx'
 import Header from './components/Header'
 import Home from './components/Home'
+import Dashboard from './components/Dashboard'
 import Repositories from './components/Repositories'
 import Community from './components/Community'
 import Profile from './components/Profile'
 import UserProfile from './components/UserProfile'
 import RepositoryDetail from './components/RepositoryDetail'
+import RepoCreate from './components/RepoCreate'
+import Tokens from './components/Tokens'
+import Bounties from './components/Bounties'
+import Governance from './components/Governance'
+import Deploy from './components/Deploy'
+import Storage from './components/Storage'
 import Footer from './components/Footer'
 import './App.css'
 import { useState, useEffect } from 'react'
@@ -91,10 +98,18 @@ function AppContent() {
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/repositories" element={<Repositories />} />
+          <Route path="/create" element={<RepoCreate />} />
           <Route path="/community" element={<Community />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/user/:username" element={<UserProfile />} />
+          <Route path="/repo/:id" element={<RepositoryDetail />} />
+          <Route path="/tokens" element={<Tokens />} />
+          <Route path="/bounties" element={<Bounties />} />
+          <Route path="/governance" element={<Governance />} />
+          <Route path="/deploy" element={<Deploy />} />
+          <Route path="/storage" element={<Storage />} />
           <Route path="/:owner/:repo" element={<RepositoryDetail />} />
         </Routes>
       </main>
