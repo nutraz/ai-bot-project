@@ -6,19 +6,23 @@
       "dependencies": []
     },
     "Icp_hub_frontend": {
-      "dependencies": ["Icp_hub_backend"],
+      "dependencies": [
+        "Icp_hub_backend"
+      ],
       "frontend": {
         "entrypoint": "src/Icp_hub_frontend/src/index.html"
       },
-      "source": ["src/Icp_hub_frontend/dist"],
+      "source": [
+        "src/Icp_hub_frontend/dist"
+      ],
       "type": "assets",
-      "workspace": "Icp_hub_frontend"  
+      "workspace": "Icp_hub_frontend"
     }
   },
   "defaults": {
     "build": {
       "args": "",
-      "packtool": ""
+      "packtool": "mops sources"
     }
   },
   "networks": {
@@ -27,10 +31,12 @@
       "type": "ephemeral"
     },
     "ic": {
-      "providers": ["https://ic0.app"],
+      "providers": [
+        "https://ic0.app"
+      ],
       "type": "persistent"
     }
   },
-  "output_env_file": ".env",  
+  "output_env_file": ".env",
   "version": 1
 }

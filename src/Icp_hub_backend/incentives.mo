@@ -345,20 +345,26 @@ module Incentives {
             var amount = config.baseAmount;
             
             // Apply base multiplier
-            amount := Float.toInt(Float.fromInt(amount) * config.multiplier);
+            //amount := Float.toInt(Float.fromInt(amount) * config.multiplier);
+            let result = Float.toInt(Float.fromInt(amount) * config.multiplier);
+            amount := Int.abs(result);
             
             // Apply custom multipliers
             switch (multipliers) {
                 case null {};
                 case (?mults) {
                     for (mult in mults.vals()) {
-                        amount := Float.toInt(Float.fromInt(amount) * mult);
+                        //amount := Float.toInt(Float.fromInt(amount) * mult);
+                        let result = Float.toInt(Float.fromInt(amount) * mult);
+                        amount := Int.abs(result);
                     };
                 };
             };
             
             // Apply impact score
-            amount := Float.toInt(Float.fromInt(amount) * metrics.impactScore);
+            //amount := Float.toInt(Float.fromInt(amount) * metrics.impactScore);
+            let metrics_result = Float.toInt(Float.fromInt(amount) * metrics.impactScore);
+            amount := Int.abs(metrics_result);
             
             // Cap at max amount
             switch (config.maxAmount) {
@@ -854,7 +860,22 @@ module Incentives {
             token := data.token;
             balances := HashMap.fromIter(data.balances.vals(), data.balances.size(), Principal.equal, Principal.hash);
             rewards := HashMap.fromIter(data.rewards.vals(), data.rewards.size(), Text.equal, Text.hash);
-            rewardConfigs := HashMap.fromIter(data.rewardConfigs.vals(), data.rewardConfigs.size(), func(a, b) { a == b }, func(r) { 0 });
+
+            rewardConfigs := HashMap.fromIter(data.rewardConfigs.vals(), data.rewardConfigs.size(), func(a: RewardType, b: RewardType): Bool { a == b }, func(r: RewardType): Nat32 {
+                switch (r) {
+                    case (#CommitReward) 1;
+                    case (#PullRequestMerged) 2;
+                    case (#IssueResolved) 3;
+                    case (#CodeReview) 4;
+                    case (#BugBounty) 5;
+                    case (#SecurityAudit) 6;
+                    case (#Documentation) 7;
+                    case (#CommunityContribution) 8;
+                    case (#MilestoneCompletion) 9;
+                    case (#CustomReward(text)) Text.hash(text);
+                }
+            }
+            );
             bounties := HashMap.fromIter(data.bounties.vals(), data.bounties.size(), Text.equal, Text.hash);
             stakes := HashMap.fromIter(data.stakes.vals(), data.stakes.size(), Principal.equal, Principal.hash);
             contributionMetrics := HashMap.fromIter(data.contributionMetrics.vals(), data.contributionMetrics.size(), Text.equal, Text.hash);

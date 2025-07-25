@@ -11,8 +11,11 @@ import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import HashMap "mo:base/HashMap";
 import Utils "./utils";
-import Hex "mo:encoding/Hex";
+//import Hex "mo:encoding/Hex";
 import Cycles "mo:base/ExperimentalCycles";
+import Hex "./libs/Hex"; 
+import Debug "mo:base/Debug";
+import Error "mo:base/Error";
 
 module ChainFusion {
     // Type definitions
@@ -162,14 +165,15 @@ module ChainFusion {
             repositoryId = "";
             commitId = "";
             chain = #ICP;
-            contractAddress = ?Principal.toText(caller); // Placeholder
+            contractAddress = ?Principal.toText(caller); 
             transactionHash = ?deploymentId;
             deployedAt = Time.now();
             deployedBy = caller;
             status = #Success;
             gasUsed = ?Cycles.balance();
             cost = null;
-        };
+            artifacts = null;  
+};
         
         #Ok(record);
     };
@@ -207,18 +211,19 @@ module ChainFusion {
                 repositoryId = "";
                 commitId = "";
                 chain = request.chain;
-                contractAddress = null; // Will be updated after mining
+                contractAddress = null; 
                 transactionHash = ?txHash;
                 deployedAt = Time.now();
                 deployedBy = caller;
                 status = #Pending;
                 gasUsed = request.gasLimit;
                 cost = null;
+                artifacts = null;
             };
             
             #Ok(record);
         } catch (e) {
-            #Err(#InternalError("Failed to deploy to Ethereum: " # debug_show(e)));
+            #Err(#InternalError("Failed to deploy to Ethereum: " # Error.message(e)));
         };
     };
 
@@ -376,7 +381,7 @@ module ChainFusion {
         switch (Text.decodeUtf8(Blob.fromArray(body))) {
             case (?text) {
                 // Extract tx hash from response
-                "0x" # Nat.toText(Time.now()); // Placeholder
+                "0x" # Nat.toText(Int.abs(Time.now()));
             };
             case null "0x0";
         };
@@ -428,7 +433,7 @@ module ChainFusion {
             });
             #Ok(balance);
         } catch (e) {
-            #Err(#InternalError("Failed to get Bitcoin balance: " # debug_show(e)));
+            #Err(#InternalError("Failed to get Bitcoin balance : " # Error.message(e)));
         };
     };
 
@@ -443,7 +448,7 @@ module ChainFusion {
             });
             #Ok(txId);
         } catch (e) {
-            #Err(#InternalError("Failed to send Bitcoin transaction: " # debug_show(e)));
+            #Err(#InternalError("Failed to send Bitcoin transaction: " # Error.message(e)));
         };
     };
 
@@ -470,7 +475,7 @@ module ChainFusion {
                     let address = publicKeyToBitcoinAddress(publicKey.public_key);
                     #Ok(address);
                 } catch (e) {
-                    #Err(#InternalError("Failed to derive Bitcoin address: " # debug_show(e)));
+                    #Err(#InternalError("Failed to derive Bitcoin address: " # Error.message(e)));
                 };
             };
             case (#Ethereum or #Polygon or #BinanceSmartChain or #Arbitrum or #Avalanche) {
@@ -489,7 +494,7 @@ module ChainFusion {
                     let address = publicKeyToEthereumAddress(publicKey.public_key);
                     #Ok(address);
                 } catch (e) {
-                    #Err(#InternalError("Failed to derive Ethereum address: " # debug_show(e)));
+                    #Err(#InternalError("Failed to derive Ethereum address: " # Error.message(e)));
                 };
             };
             case _ {
@@ -528,7 +533,7 @@ module ChainFusion {
                     });
                     #Ok(signature.signature);
                 } catch (e) {
-                    #Err(#InternalError("Failed to sign transaction: " # debug_show(e)));
+                    #Err(#InternalError("Failed to sign transaction: " # Error.message(e)));
                 };
             };
             case _ {
