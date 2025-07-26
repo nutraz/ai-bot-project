@@ -17,6 +17,7 @@ import Storage from './components/Storage'
 import Footer from './components/Footer'
 import './App.css'
 import { useState, useEffect } from 'react'
+import apiService from './services/api'
 
 // Loading component
 function LoadingSpinner() {
@@ -69,7 +70,20 @@ function ErrorBoundary({ children }) {
 
 // Main App content component
 function AppContent() {
-  const { loading, error } = useWallet()
+  const { loading, error, isConnected } = useWallet()
+  
+  // Initialize API service
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await apiService.init()
+      } catch (error) {
+        console.error('Failed to initialize API service:', error)
+      }
+    }
+    
+    initializeApp()
+  }, [])
 
   if (loading) {
     return <LoadingSpinner />

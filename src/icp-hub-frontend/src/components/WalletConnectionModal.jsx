@@ -1,58 +1,58 @@
 import { useState } from 'react'
 import { useWallet } from '../services/walletService.jsx'
-import { X, Wallet, AlertCircle, CheckCircle, Loader, ExternalLink } from 'lucide-react'
+import { X, Shield, AlertCircle, CheckCircle, Loader, ExternalLink } from 'lucide-react'
 
 function WalletConnectionModal({ isOpen, onClose }) {
   const { 
-    connectPlug,
+    connectInternetIdentity,
     loading,
-    isWalletAvailable,
-    WALLET_TYPES
+    isAuthAvailable,
+    AUTH_TYPES
   } = useWallet()
   
-  const [connectingWallet, setConnectingWallet] = useState(null)
+  const [connecting, setConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState(null)
   const [connectionSuccess, setConnectionSuccess] = useState(null)
 
-  // Only Plug Wallet option
-  const walletOptions = [
+  // Internet Identity option
+  const authOptions = [
     {
-      type: WALLET_TYPES.PLUG,
-      name: 'Plug Wallet',
-      description: 'Connect using Plug wallet for Internet Computer',
-      icon: '🔌',
-      color: '#4c9aff',
-      downloadUrl: 'https://plugwallet.ooo/',
-      connectFunction: connectPlug
+      type: AUTH_TYPES.INTERNET_IDENTITY,
+      name: 'Internet Identity',
+      description: 'Secure authentication for Internet Computer',
+      icon: '🔐',
+      color: '#29abe2',
+      learnMoreUrl: 'https://identity.ic0.app',
+      connectFunction: connectInternetIdentity
     }
   ]
 
-  const handleWalletConnect = async (wallet) => {
-    setConnectingWallet(wallet.type)
+  const handleAuthConnect = async (authOption) => {
+    setConnecting(true)
     setConnectionError(null)
     setConnectionSuccess(null)
 
     try {
-      const result = await wallet.connectFunction()
+      const result = await authOption.connectFunction()
       
       if (result.success) {
-        setConnectionSuccess(`Successfully connected to ${wallet.name}!`)
+        setConnectionSuccess(`Successfully authenticated with ${authOption.name}!`)
         setTimeout(() => {
           handleClose()
         }, 2000)
       } else {
-        setConnectionError(result.error || `Failed to connect to ${wallet.name}`)
+        setConnectionError(result.error || `Failed to authenticate with ${authOption.name}`)
       }
     } catch (error) {
-      setConnectionError(error.message || `Failed to connect to ${wallet.name}`)
+      setConnectionError(error.message || `Failed to authenticate with ${authOption.name}`)
     } finally {
-      setConnectingWallet(null)
+      setConnecting(false)
     }
   }
 
   const handleClose = () => {
-    if (!connectingWallet) {
-      setConnectingWallet(null)
+    if (!connecting) {
+      setConnecting(false)
       setConnectionError(null)
       setConnectionSuccess(null)
       onClose()
@@ -69,7 +69,7 @@ function WalletConnectionModal({ isOpen, onClose }) {
             <div className="success-icon">
               <CheckCircle size={48} />
             </div>
-            <h2>Wallet Connected!</h2>
+            <h2>Authentication Successful!</h2>
             <p>{connectionSuccess}</p>
             <div className="loading-dots">
               <span></span>
@@ -87,20 +87,20 @@ function WalletConnectionModal({ isOpen, onClose }) {
       <div className="modal-content wallet-modal">
         <div className="modal-header">
           <h2>
-            <Wallet size={24} />
-            Connect Your Wallet
+            <Shield size={24} />
+            Connect to Internet Computer
           </h2>
           <button 
             className="modal-close"
             onClick={handleClose}
-            disabled={connectingWallet}
+            disabled={connecting}
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="wallet-modal-description">
-                          <p>Connect your Plug wallet to start using OpenKey on the Internet Computer.</p>
+          <p>Authenticate with Internet Identity to access your ICPHub account.</p>
         </div>
 
         {connectionError && (
@@ -111,51 +111,43 @@ function WalletConnectionModal({ isOpen, onClose }) {
         )}
 
         <div className="wallet-options">
-          {walletOptions.map((wallet) => {
-            const isAvailable = isWalletAvailable(wallet.type)
-            const isConnecting = connectingWallet === wallet.type
+          {authOptions.map((authOption) => {
+            const isAvailable = isAuthAvailable()
+            const isConnecting = connecting
 
             return (
-              <div key={wallet.type} className="wallet-option">
+              <div key={authOption.type} className="wallet-option">
                 <button
                   className={`wallet-option-button ${!isAvailable ? 'unavailable' : ''} ${isConnecting ? 'connecting' : ''}`}
-                  onClick={() => isAvailable ? handleWalletConnect(wallet) : window.open(wallet.downloadUrl, '_blank')}
-                  disabled={connectingWallet && !isConnecting}
+                  onClick={() => isAvailable ? handleAuthConnect(authOption) : window.open(authOption.learnMoreUrl, '_blank')}
+                  disabled={connecting}
                 >
                   <div className="wallet-option-content">
-                    <div className="wallet-icon" style={{ backgroundColor: wallet.color }}>
+                    <div className="wallet-icon" style={{ backgroundColor: authOption.color }}>
                       {isConnecting ? (
                         <Loader size={24} className="spinner" />
                       ) : (
-                        <span className="wallet-emoji">{wallet.icon}</span>
+                        <span className="wallet-emoji">{authOption.icon}</span>
                       )}
                     </div>
                     
                     <div className="wallet-info">
                       <div className="wallet-name">
-                        {wallet.name}
-                        {!isAvailable && <span className="not-installed">Not Installed</span>}
+                        {authOption.name}
                       </div>
                       <div className="wallet-description">
-                        {isConnecting ? 'Connecting...' : wallet.description}
+                        {isConnecting ? 'Authenticating...' : authOption.description}
                       </div>
                     </div>
 
                     <div className="wallet-action">
-                      {isAvailable ? (
-                        isConnecting ? (
-                          <div className="connecting-indicator">
-                            <Loader size={16} className="spinner" />
-                          </div>
-                        ) : (
-                          <div className="connect-button">
-                            Connect
-                          </div>
-                        )
+                      {isConnecting ? (
+                        <div className="connecting-indicator">
+                          <Loader size={16} className="spinner" />
+                        </div>
                       ) : (
-                        <div className="install-button">
-                          <ExternalLink size={16} />
-                          Install
+                        <div className="connect-button">
+                          Connect
                         </div>
                       )}
                     </div>
@@ -168,8 +160,8 @@ function WalletConnectionModal({ isOpen, onClose }) {
 
         <div className="wallet-modal-footer">
           <p className="wallet-disclaimer">
-            <strong>New to Plug?</strong> Plug is a browser extension wallet for the Internet Computer. 
-            <a href="https://plugwallet.ooo/" target="_blank" rel="noopener noreferrer">Install Plug Wallet</a> to get started.
+            <strong>New to Internet Identity?</strong> Internet Identity is a secure, anonymous authentication system for the Internet Computer. 
+            <a href="https://identity.ic0.app" target="_blank" rel="noopener noreferrer">Learn more</a>
           </p>
         </div>
       </div>
@@ -177,4 +169,4 @@ function WalletConnectionModal({ isOpen, onClose }) {
   )
 }
 
-export default WalletConnectionModal 
+export default WalletConnectionModal
