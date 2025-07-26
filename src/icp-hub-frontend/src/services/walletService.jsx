@@ -13,68 +13,65 @@ export const useWallet = () => {
   return context
 }
 
-// Only Plug Wallet supported
-export const WALLET_TYPES = {
-  PLUG: 'plug',
+// Authentication types
+export const AUTH_TYPES = {
+  INTERNET_IDENTITY: 'internet_identity',
 }
 
-// Wallet Provider Component
+// Wallet Provider Component  
 export const WalletProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false)
-  const [currentWallet, setCurrentWallet] = useState(null)
-  const [walletType, setWalletType] = useState(null)
-  const [address, setAddress] = useState(null)
-  const [balance, setBalance] = useState(null)
-  const [network, setNetwork] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [principal, setPrincipal] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    checkExistingConnection()
+    initializeAuth()
   }, [])
 
-  const checkExistingConnection = async () => {
+  const initializeAuth = async () => {
     try {
       setLoading(true)
-      if (typeof window !== 'undefined' && window.ic?.plug) {
-        const connected = await window.ic.plug.isConnected()
-        if (connected) {
-          await connectPlug()
-          return
-        }
+      const initialized = await apiService.init()
+      
+      if (initialized && apiService.isAuthenticated) {
+        const user = await apiService.getCurrentUser()
+        const userPrincipal = apiService.getPrincipal()
+        
+        setIsConnected(true)
+        setCurrentUser(user)
+        setPrincipal(userPrincipal?.toString())
       }
     } catch (error) {
-      console.error('Error checking existing wallet connection:', error)
+      console.error('Auth initialization failed:', error)
+      setError(error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  const connectPlug = async () => {
+  const connectInternetIdentity = async () => {
     try {
       setLoading(true)
       setError(null)
-      if (!window.ic?.plug) {
-        throw new Error('Plug Wallet is not installed')
+      
+      const success = await apiService.login()
+      
+      if (success) {
+        const user = await apiService.getCurrentUser()
+        const userPrincipal = apiService.getPrincipal()
+        
+        setIsConnected(true)
+        setCurrentUser(user)
+        setPrincipal(userPrincipal?.toString())
+        
+        return { success: true, principal: userPrincipal?.toString() }
+      } else {
+        throw new Error('Failed to connect with Internet Identity')
       }
-      const connected = await window.ic.plug.requestConnect({
-        whitelist: [process.env.VITE_BACKEND_CANISTER_ID],
-        host: process.env.VITE_DFX_NETWORK === 'local' ? 'http://localhost:4943' : 'https://ic0.app',
-      })
-      if (!connected) {
-        throw new Error('Failed to connect to Plug Wallet')
-      }
-      const principal = await window.ic.plug.agent.getPrincipal()
-      const balance = await window.ic.plug.requestBalance()
-      setIsConnected(true)
-      setCurrentWallet({ address: principal.toString(), type: WALLET_TYPES.PLUG })
-      setWalletType(WALLET_TYPES.PLUG)
-      setAddress(principal.toString())
-      setBalance(balance[0]?.amount || 0)
-      setNetwork('Internet Computer')
-      return { success: true, address: principal.toString() }
     } catch (error) {
-      console.error('Plug Wallet connection failed:', error)
+      console.error('Internet Identity connection failed:', error)
       setError(error.message)
       return { success: false, error: error.message }
     } finally {
@@ -86,18 +83,19 @@ export const WalletProvider = ({ children }) => {
     try {
       setLoading(true)
       setError(null)
-      if (walletType === WALLET_TYPES.PLUG && window.ic?.plug) {
-        await window.ic.plug.disconnect()
+      
+      const success = await apiService.logout()
+      
+      if (success) {
+        setIsConnected(false)
+        setCurrentUser(null)
+        setPrincipal(null)
+        return { success: true }
+      } else {
+        throw new Error('Failed to disconnect')
       }
-      setIsConnected(false)
-      setCurrentWallet(null)
-      setWalletType(null)
-      setAddress(null)
-      setBalance(null)
-      setNetwork(null)
-      return { success: true }
     } catch (error) {
-      console.error('Wallet disconnection failed:', error)
+      console.error('Disconnect failed:', error)
       setError(error.message)
       return { success: false, error: error.message }
     } finally {
@@ -112,32 +110,23 @@ export const WalletProvider = ({ children }) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
-  const formatBalance = (bal) => {
-    if (!bal) return '0'
-    return Number(bal).toFixed(4)
-  }
-
-  // Check if Plug Wallet is available
-  const isWalletAvailable = (type) => {
-    return type === WALLET_TYPES.PLUG && typeof window !== 'undefined' && window.ic?.plug
+  const isAuthAvailable = () => {
+    return typeof window !== 'undefined'
   }
 
   const value = {
     isConnected,
-    currentWallet,
-    walletType,
-    address,
-    balance,
-    network,
+    currentUser,
+    principal,
+    address: principal,
     loading,
     error,
-    connectPlug,
+    connectInternetIdentity,
     disconnectWallet,
     setError,
     formatAddress,
-    formatBalance,
-    isWalletAvailable,
-    WALLET_TYPES
+    isAuthAvailable,
+    AUTH_TYPES
   }
 
   return (
@@ -147,4 +136,4 @@ export const WalletProvider = ({ children }) => {
   )
 }
 
-export default WalletContext 
+export default WalletContext

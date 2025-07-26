@@ -6,21 +6,17 @@ import NewRepositoryModal from './NewRepositoryModal'
 import WalletConnectionModal from './WalletConnectionModal'
 
 function Header() {
-  const { 
-    isConnected, 
-    currentWallet, 
-    address,
-    balance,
-    network,
-    walletType,
-    disconnectWallet,
-    loading,
-    error,
-    setError,
-    formatAddress,
-    formatBalance,
-    getWalletDisplayName
-  } = useWallet()
+    const { 
+  isConnected, 
+  currentUser,
+  principal,
+  address,
+  loading,
+  error,
+  setError,
+  formatAddress,
+  disconnectWallet
+} = useWallet()
   
   const navigate = useNavigate()
   const location = useLocation()
@@ -163,15 +159,16 @@ function Header() {
                         <div className="wallet-main">
                           <Wallet size={16} />
                           <span className="wallet-address">
-                            {formatAddress(address)}
+                            {formatAddress(principal)}
                           </span>
                         </div>
                         <div className="wallet-details">
                           <span className="wallet-balance">
-                            {formatBalance(balance)} {walletType === 'metamask' ? 'ETH' : 'ICP'}
+                            Internet Computer
                           </span>
                           <span className="wallet-network">
-                            {network}
+                            {/*{network}*/}
+                            {currentUser ? `@${currentUser.username}` : 'Authenticated'}
                           </span>
                         </div>
                       </div>
@@ -191,15 +188,17 @@ function Header() {
                         
                         <div className="wallet-menu-info">
                           <div className="info-row">
-                            <span className="label">Address:</span>
-                            <span className="value">{formatAddress(address)}</span>
+                            <span className="label">Principal:</span>
+                            <span className="value">{formatAddress(principal)}</span>
                           </div>
+                          {currentUser && (
                           <div className="info-row">
                             <span className="label">Balance:</span>
                             <span className="value">
                               {formatBalance(balance)} {walletType === 'metamask' ? 'ETH' : 'ICP'}
                             </span>
                           </div>
+                          )}
                           <div className="info-row">
                             <span className="label">Network:</span>
                             <span className="value">{network}</span>
