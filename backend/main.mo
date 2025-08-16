@@ -1,3 +1,4 @@
+cat > src/Icp_hub_backend/main.mo << 'EOF'
 import Okt "canister:okt";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
@@ -16,3 +17,4 @@ actor Icp_hub_backend {
     "Rewarded " # Debug.text(principal) # " with " # Debug.text(result) # " OKT"
   };
 };
+EOF

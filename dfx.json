@@ -1,35 +1,21 @@
 {
   "canisters": {
-    "Icp_hub_backend": {
-      "main": "src/Icp_hub_backend/main.mo",
-      "type": "motoko"
-    },
-    "icp-hub-frontend": {
-      "dependencies": [
-        "Icp_hub_backend"
-      ],
-      "frontend": {
-        "entrypoint": "src/icp-hub-frontend/index.html"
-      },
-      "source": [
-        "src/icp-hub-frontend/dist"
-      ],
+    "icp_hub_frontend": {
       "type": "assets",
-      "build": "cd src/icp-hub-frontend && npm run build"
-    }
-  },
-  "networks": {
-    "local": {
-      "bind": "127.0.0.1:8000",
-      "type": "ephemeral"
+      "source": ["frontend/dist"],
+      "frontend": {
+        "entrypoint": "frontend/src/index.html"
+      },
+      "build": "npm run build --prefix frontend"
     },
-    "ic": {
-      "providers": [
-        "https://ic0.app"
-      ],
-      "type": "persistent"
+    "Icp_hub_backend": {
+      "type": "motoko",
+      "main": "src/Icp_hub_backend/main.mo"
+    },
+    "okt": {
+      "type": "motoko",
+      "main": "backend/src/okt/okt.mo"
     }
   },
-  "output_env_file": ".env",
   "version": 1
 }
