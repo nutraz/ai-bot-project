@@ -29,9 +29,6 @@ Motoko code and canister logic are in src/Icp_hub_backend/.
 Contributing
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss your ideas.
 
-License
-No license specified yet. Please add a LICENSE file to clarify usage rights.
-
 Maintainers
 nutraz
 Icphub-web3
