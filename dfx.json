@@ -1,0 +1,21 @@
+{
+  "canisters": {
+    "icp_hub_frontend": {
+      "type": "assets",
+      "source": ["frontend/dist"],
+      "frontend": {
+        "entrypoint": "frontend/src/index.html"
+      },
+      "build": "npm run build --prefix frontend"
+    },
+    "Icp_hub_backend": {
+      "type": "motoko",
+      "main": "src/Icp_hub_backend/main.mo"
+    },
+    "okt": {
+      "type": "motoko",
+      "main": "backend/src/okt/okt.mo"
+    }
+  },
+  "version": 1
+}

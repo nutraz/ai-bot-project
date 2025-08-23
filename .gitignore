@@ -1,0 +1,6 @@
+node_modules
+.dfx
+dist
+build
+canister_ids.json
+.DS_Store

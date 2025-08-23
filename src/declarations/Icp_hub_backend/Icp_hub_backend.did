@@ -1,0 +1,13 @@
+type UserId = principal;
+type User = 
+ record {
+   id: UserId;
+   joined: int;
+   name: text;
+ };
+service : {
+  getUser: (userId: UserId) -> (opt User) query;
+  greet: (name: text) -> (text) query;
+  listUsers: () -> (vec User) query;
+  registerUser: (name: text) -> (text);
+}
