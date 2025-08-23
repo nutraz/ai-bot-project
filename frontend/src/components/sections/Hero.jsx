@@ -1,7 +1,7 @@
 import React from 'react'
 import { GitBranch, ShieldCheck, Flame, Globe2 } from 'lucide-react'
 
-const Hero = () => {
+const Hero = ({ onTryDemo }) => {
   return (
     <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-700 text-white p-8 md:p-12">
       <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
@@ -21,9 +21,12 @@ const Hero = () => {
             Censorship-resistant, tamper-evident code hosting powered by Internet Computer Protocol. Build in public, verifiably.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a href="#demo" className="inline-flex items-center rounded-lg bg-white text-blue-700 px-5 py-3 font-semibold shadow-sm hover:bg-blue-50 transition">
+            <button
+              onClick={onTryDemo}
+              className="inline-flex items-center rounded-lg bg-white text-blue-700 px-5 py-3 font-semibold shadow-sm hover:bg-blue-50 transition"
+            >
               Try Demo
-            </a>
+            </button>
             <a href="#features" className="inline-flex items-center rounded-lg border border-white/40 px-5 py-3 font-semibold hover:bg-white/10 transition">
               Learn more
             </a>
