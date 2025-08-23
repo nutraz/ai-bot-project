@@ -76,10 +76,10 @@ const Header = () => {
             </Link>
             {isAuthenticated && (
               <>
-                <Link to="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
+                <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
                   Dashboard
                 </Link>
-                <Link to="/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
+                <Link to="/repo/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
                   New Repository
                 </Link>
               </>
@@ -145,14 +145,14 @@ const Header = () => {
               {isAuthenticated ? (
                 <>
                   <Link 
-                    to="/dashboard" 
+                    to="/repositories"
                     className="text-gray-700 hover:text-gray-900 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link 
-                    to="/create" 
+                    to="/repo/create"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 text-center"
                     onClick={() => setIsMenuOpen(false)}
                   >

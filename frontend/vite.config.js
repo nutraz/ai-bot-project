@@ -5,6 +5,9 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Support GitHub Pages deployments by allowing a base path override.
+  // Example: set BASE_PATH=/ai-bot-project/ in CI.
+  base: process.env.BASE_PATH || '/',
   server: {
     port: 5173,
     host: true,
