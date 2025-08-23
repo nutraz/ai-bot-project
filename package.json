@@ -1,13 +1,17 @@
 {
   "name": "openkeyhub",
   "version": "1.0.0",
-  "description": "Your description here",
+  "description": "OpenKeyHub - AI Bot Project with ICP integration",
   "main": "index.js",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev"
+    "dev:frontend": "cd frontend/src/icp-hub-frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "cd frontend/src/icp-hub-frontend && npm install && npm run build",
+    "build:frontend": "cd frontend/src/icp-hub-frontend && npm run build",
+    "install:frontend": "cd frontend/src/icp-hub-frontend && npm install",
+    "preview": "cd frontend/src/icp-hub-frontend && npm run preview"
   },
   "dependencies": {},
   "devDependencies": {

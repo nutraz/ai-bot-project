@@ -1,43 +1,97 @@
-Openkey Hub  
+# OpenKeyHub - AI Bot Project
+
 A template repository for building Internet Computer (ICP) smart contracts and dApps, primarily using Motoko. This project is designed to be cloned or forked for rapid development and deployment of web3 applications.
 
-Features
+## Features
 - Motoko-based smart contract (canister) development
-- Frontend integration (Next.js/Vite)
-- Deployment guides for Vercel, Netlify, and popular blockchain testnets (Ethereum, Polygon, Bitcoin)
+- React + TypeScript frontend with Vite
+- Internet Computer (ICP) integration  
+- Deployment guides for Vercel, Netlify, and popular blockchain testnets
 - Multi-contributor support and template repository setup
 
-Getting Started
-Clone the repository:
-```
+## Getting Started
+
+### Development Setup
+
+1. **Clone the repository:**
+```bash
 git clone https://github.com/nutraz/ai-bot-project.git
 cd ai-bot-project
 ```
 
-Install dependencies:
-
-For backend/canister: Follow Motoko/DFINITY SDK instructions
-For frontend:
-```
-cd frontend
-npm install
+2. **Install dependencies and start development:**
+```bash
+npm run dev
 ```
 
-Configure environment variables:
-See DEPLOYMENT_STEPS.md for required .env settings
+This will start both frontend and backend development servers.
 
-Develop and deploy:
-Use the provided deployment steps for Vercel, Netlify, or testnets
+### Frontend Only Development
+```bash
+npm run dev:frontend
+```
 
-Documentation
-See DEPLOYMENT_STEPS.md for detailed deployment and environment setup instructions.
-Motoko code and canister logic are in src/Icp_hub_backend/.
+## Building for Production
 
-Contributing
+```bash
+npm run build
+```
+
+## Deployment to Cost-Free Platforms
+
+### Deploy to Netlify (Recommended - Free)
+
+1. **Automatic Deployment:**
+   - Connect your GitHub repository to [Netlify](https://netlify.com)
+   - Netlify will automatically use the `netlify.toml` configuration
+   - No additional setup required!
+
+2. **Manual Deployment:**
+   - Build the project: `npm run build`
+   - Upload the `frontend/src/icp-hub-frontend/dist` folder to Netlify
+
+### Deploy to Vercel (Alternative - Free)
+
+1. **Automatic Deployment:**
+   - Connect your GitHub repository to [Vercel](https://vercel.com)
+   - Vercel will automatically use the `vercel.json` configuration
+
+2. **Manual Deployment:**
+   ```bash
+   npx vercel --prod
+   ```
+
+### Other Free Hosting Options
+
+- **GitHub Pages**: Build and deploy to `gh-pages` branch
+- **Surge.sh**: `npm install -g surge && surge frontend/src/icp-hub-frontend/dist`
+- **Firebase Hosting**: Use Firebase CLI to deploy the dist folder
+
+## Configuration Files
+
+- `netlify.toml` - Netlify deployment configuration
+- `vercel.json` - Vercel deployment configuration  
+- `frontend/src/icp-hub-frontend/public/_redirects` - SPA routing redirects
+
+## Project Structure
+
+```
+├── frontend/src/icp-hub-frontend/    # Main React application
+├── backend/                          # Internet Computer canisters  
+├── netlify.toml                     # Netlify configuration
+├── vercel.json                      # Vercel configuration
+└── package.json                     # Root package configuration
+```
+
+## Documentation
+- See [DEPLOYMENT_STEPS.md](./DEPLOYMENT_STEPS.md) for detailed deployment instructions
+- Motoko code and canister logic are in `src/Icp_hub_backend/`
+
+## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss your ideas.
 
-Maintainers
-nutraz
-Icphub-web3
-biswas2200
-aryarathoree
+## Maintainers
+- nutraz
+- Icphub-web3  
+- biswas2200
+- aryarathoree
