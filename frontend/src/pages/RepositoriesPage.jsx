@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getRepos, addRepo, removeRepo } from '../lib/demoStore'
+import { getRepos, addRepo, removeRepo, seedDemoRepos, clearRepos } from '../lib/demoStore'
 
 const RepositoriesPage = () => {
 	const [repos, setRepos] = useState([])
@@ -26,7 +26,25 @@ const RepositoriesPage = () => {
 
 	return (
 		<div className="max-w-6xl mx-auto p-6">
-			<h1 className="text-2xl font-bold">Repositories</h1>
+				<div className="flex items-center justify-between gap-3">
+					<h1 className="text-2xl font-bold">Repositories</h1>
+					<div className="flex gap-2">
+						<button
+							onClick={() => { seedDemoRepos(); setRepos(getRepos()) }}
+							className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+							title="Seed a few sample repositories"
+						>
+							Seed demo
+						</button>
+						<button
+							onClick={() => { clearRepos(); setRepos(getRepos()) }}
+							className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+							title="Clear local demo data"
+						>
+							Reset demo
+						</button>
+					</div>
+				</div>
 			<form onSubmit={onCreate} className="mt-6 grid gap-3 md:grid-cols-3">
 				<input value={name} onChange={(e)=>setName(e.target.value)} placeholder="owner/name" className="border rounded-lg px-3 py-2" />
 				<input value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="description (optional)" className="border rounded-lg px-3 py-2" />
