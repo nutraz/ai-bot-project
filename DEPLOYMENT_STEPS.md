@@ -1,4 +1,14 @@
 <!--
+IMPORTANT: Repository nutraz/ai-bot-project is missing key open source files and metadata!
+
+- ❗ No README.md: Add a README to describe project purpose, features, setup, and usage.
+- ❗ No LICENSE: Add a LICENSE file to clarify usage rights and encourage contributions.
+- ❗ No project description: Set a description in the GitHub repository settings for context.
+
+These are essential for clarity, discoverability, and open source compliance. Please add them as soon as possible.
+-->
+
+<!--
 RECOMMENDATIONS FOR nutraz/ai-bot-project
 
 - Add a README.md: Describe the project, features, installation, usage, and contribution guidelines.
