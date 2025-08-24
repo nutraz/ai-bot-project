@@ -1,0 +1,12 @@
+{
+  "name": "icp-hub-frontend-workspace",
+  "version": "1.0.0",
+  "description": "Frontend workspace for ICP Hub project",
+  "private": true,
+  "scripts": {
+    "dev": "cd src/icp-hub-frontend && npm run dev",
+    "build": "cd src/icp-hub-frontend && npm run build", 
+    "lint": "cd src/icp-hub-frontend && npm run lint",
+    "preview": "cd src/icp-hub-frontend && npm run preview"
+  }
+}
