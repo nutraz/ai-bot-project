@@ -7,16 +7,70 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@dfinity/agent':
+        specifier: 3.2.2
+        version: 3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0)
+      '@dfinity/auth-client':
+        specifier: 3.2.2
+        version: 3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/identity@3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.2.2)
+      '@dfinity/candid':
+        specifier: 3.2.2
+        version: 3.2.2(@dfinity/principal@3.2.2)
+      '@dfinity/identity':
+        specifier: 3.2.2
+        version: 3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal':
+        specifier: 3.2.2
+        version: 3.2.2
     devDependencies:
       concurrently:
-        specifier: ^8.2.2
-        version: 8.2.2
+        specifier: ^9.2.0
+        version: 9.2.0
 
 packages:
 
-  '@babel/runtime@7.28.3':
-    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
-    engines: {node: '>=6.9.0'}
+  '@dfinity/agent@3.2.2':
+    resolution: {integrity: sha512-2kISpJ89OYOKASyUuS3f0Sq3HiEWxK0hfEa43cFk5PKXvuHSY+As8LB5HP1KZzur8HSoeu8qxTeKx/Urk1CZ8A==}
+    peerDependencies:
+      '@dfinity/candid': 3.2.2
+      '@dfinity/principal': 3.2.2
+      '@noble/hashes': ^1.8.0
+
+  '@dfinity/auth-client@3.2.2':
+    resolution: {integrity: sha512-3qNm8untJK/D4js7bMTS0s3hMlBx8wkIA9MOnhewGFv5OG4PuwE4g3GDgrPpoy3WVGHzUrj3mer3d7w+CJdgcg==}
+    peerDependencies:
+      '@dfinity/agent': 3.2.2
+      '@dfinity/identity': 3.2.2
+      '@dfinity/principal': 3.2.2
+
+  '@dfinity/candid@3.2.2':
+    resolution: {integrity: sha512-paxpJIjCRBB8YUYJm9GG/nB8qGPvkRqt2Z4vudQtjcKuKnKPohuIbXAJ1UT9TrXRTMdYev1UgbbBbOg/BeE7+A==}
+    peerDependencies:
+      '@dfinity/principal': 3.2.2
+
+  '@dfinity/cbor@0.2.2':
+    resolution: {integrity: sha512-GPJpH73kDEKbUBdUjY80lz7cq9l0vm1h/7ppejPV6O0ZTqCLrYspssYvqjRmK4aNnJ/SKXsP0rg9LYX7zpegaA==}
+
+  '@dfinity/identity@3.2.2':
+    resolution: {integrity: sha512-T24qmpM/ZG/B5YRjzTtJhmUhUIySIQCT1cqEU2Pq/QANxryijmfXhLK7NDWnPZfXXze8pTpdAgqTtwbSNipX6g==}
+    peerDependencies:
+      '@dfinity/agent': 3.2.2
+      '@dfinity/candid': 3.2.2
+      '@dfinity/principal': 3.2.2
+      '@noble/curves': ^1.9.2
+      '@noble/hashes': ^1.8.0
+
+  '@dfinity/principal@3.2.2':
+    resolution: {integrity: sha512-e5tHOYfpMvUkCOdJn9H+7iJk+eYJ8xpHNKMOCQQTSRMo9BZOU0SBxDBk+4gpKaI42KSd9TbnxEJ/+1/zE2pemA==}
+
+  '@noble/curves@1.9.7':
+    resolution: {integrity: sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==}
+    engines: {node: ^14.21.3 || >=16}
+
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -41,14 +95,10 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  concurrently@8.2.2:
-    resolution: {integrity: sha512-1dP4gpXFhei8IOtlXRE/T/4H88ElHgTiUzh71YUmtjTEHMSRS2Z/fgOxHSxxusGHogsRfxNq1vyAwxSC+EVyDg==}
-    engines: {node: ^14.13.0 || >=16.0.0}
+  concurrently@9.2.0:
+    resolution: {integrity: sha512-IsB/fiXTupmagMW4MNp2lx2cdSN2FfZq78vF90LBB+zZHArbIQZjQtzXCiXnvTxCZSvXanTqFLWBjw2UkLx1SQ==}
+    engines: {node: '>=18'}
     hasBin: true
-
-  date-fns@2.30.0:
-    resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
-    engines: {node: '>=0.11'}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -64,6 +114,9 @@ packages:
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
+
+  idb@7.1.1:
+    resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
   is-fullwidth-code-point@3.0.0:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
@@ -82,9 +135,6 @@ packages:
   shell-quote@1.8.3:
     resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
     engines: {node: '>= 0.4'}
-
-  spawn-command@0.0.2:
-    resolution: {integrity: sha512-zC8zGoGkmc8J9ndvml8Xksr1Amk9qBujgbF0JAIWO7kXr43w0h/0GJNM/Vustixu+YE8N/MTrQ7N31FvHUACxQ==}
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -127,7 +177,44 @@ packages:
 
 snapshots:
 
-  '@babel/runtime@7.28.3': {}
+  '@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/candid': 3.2.2(@dfinity/principal@3.2.2)
+      '@dfinity/cbor': 0.2.2
+      '@dfinity/principal': 3.2.2
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+
+  '@dfinity/auth-client@3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/identity@3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/curves@1.9.7)(@noble/hashes@1.8.0))(@dfinity/principal@3.2.2)':
+    dependencies:
+      '@dfinity/agent': 3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0)
+      '@dfinity/identity': 3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@dfinity/principal': 3.2.2
+      idb: 7.1.1
+
+  '@dfinity/candid@3.2.2(@dfinity/principal@3.2.2)':
+    dependencies:
+      '@dfinity/principal': 3.2.2
+
+  '@dfinity/cbor@0.2.2': {}
+
+  '@dfinity/identity@3.2.2(@dfinity/agent@3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0))(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/curves@1.9.7)(@noble/hashes@1.8.0)':
+    dependencies:
+      '@dfinity/agent': 3.2.2(@dfinity/candid@3.2.2(@dfinity/principal@3.2.2))(@dfinity/principal@3.2.2)(@noble/hashes@1.8.0)
+      '@dfinity/candid': 3.2.2(@dfinity/principal@3.2.2)
+      '@dfinity/principal': 3.2.2
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+
+  '@dfinity/principal@3.2.2':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
+  '@noble/curves@1.9.7':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
+  '@noble/hashes@1.8.0': {}
 
   ansi-regex@5.0.1: {}
 
@@ -152,21 +239,15 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  concurrently@8.2.2:
+  concurrently@9.2.0:
     dependencies:
       chalk: 4.1.2
-      date-fns: 2.30.0
       lodash: 4.17.21
       rxjs: 7.8.2
       shell-quote: 1.8.3
-      spawn-command: 0.0.2
       supports-color: 8.1.1
       tree-kill: 1.2.2
       yargs: 17.7.2
-
-  date-fns@2.30.0:
-    dependencies:
-      '@babel/runtime': 7.28.3
 
   emoji-regex@8.0.0: {}
 
@@ -175,6 +256,8 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   has-flag@4.0.0: {}
+
+  idb@7.1.1: {}
 
   is-fullwidth-code-point@3.0.0: {}
 
@@ -187,8 +270,6 @@ snapshots:
       tslib: 2.8.1
 
   shell-quote@1.8.3: {}
-
-  spawn-command@0.0.2: {}
 
   string-width@4.2.3:
     dependencies:

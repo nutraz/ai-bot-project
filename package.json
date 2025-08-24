@@ -9,8 +9,14 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev"
   },
-  "dependencies": {},
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.2.0"
+  },
+  "dependencies": {
+    "@dfinity/agent": "3.2.2",
+    "@dfinity/auth-client": "3.2.2",
+    "@dfinity/candid": "3.2.2",
+    "@dfinity/identity": "3.2.2",
+    "@dfinity/principal": "3.2.2"
   }
 }
