@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev"
+    "dev:backend": "cd backend && npm run dev",
+    "build": "cd frontend/src/icp-hub-frontend && npm install && npm run build",
+    "install:frontend": "cd frontend/src/icp-hub-frontend && npm install"
   },
   "dependencies": {},
   "devDependencies": {
