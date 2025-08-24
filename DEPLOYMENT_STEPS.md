@@ -25,22 +25,35 @@ These steps will help others understand, use, and contribute to your project.
 
    - Repo: https://github.com/nutraz/ai-bot-project
 
-2. **Deploy to Vercel**
+2. **Deploy to Free Hosting Platforms**
 
+   **📖 For detailed deployment instructions, see [DEPLOYMENT_FREE_HOSTING.md](DEPLOYMENT_FREE_HOSTING.md)**
+
+   **Quick Start:**
+   ```bash
+   # Test build locally first
+   ./deploy-test.sh
+   ```
+
+   **Vercel (Recommended):**
    - Go to https://vercel.com/import
-   - Import your GitHub repo
-   - Set environment variables if needed (ICP canister IDs, etc.)
+   - Import your GitHub repo (auto-detects `vercel.json` configuration)
    - Deploy and get your public URL (e.g., https://ai-bot-project.vercel.app)
 
-3. **(Optional) Deploy to Netlify**
-
-   - Go to https://app.netlify.com/start
-   - Connect your repo, set build command and publish directory (`dist` if using static export)
+   **Netlify:**
+   - Go to https://app.netlify.com/start  
+   - Connect your repo (auto-detects `netlify.toml` configuration)
    - Deploy and get your public URL
+
+   **Automated Deployment:**
+   - GitHub Actions will auto-deploy on push to main/master
+   - Workflows configured in `.github/workflows/`
 
 4. **Test your public link on any device**
 
 5. **Share your public link with users**
+
+> 💡 **New!** For zero-cost deployment with automated GitHub Actions, see [DEPLOYMENT_FREE_HOSTING.md](DEPLOYMENT_FREE_HOSTING.md) for comprehensive Netlify and Vercel setup instructions.
 
 ---
 
