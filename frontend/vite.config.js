@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -32,4 +30,3 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // increases warning limit to 1000 kB
   },
 })
->>>>>>> bf2dd6c (Resolve merge conflict in frontend/package.json)
