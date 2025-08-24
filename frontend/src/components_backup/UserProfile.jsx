@@ -286,7 +286,7 @@ function UserProfile() {
             
             <div className="user-info-section">
               <div className="user-name-section">
-                <h1>{user.name}</h1>
+                <h1 className="text-2xl font-bold my-4">{user.name}</h1>
                 <p className="user-username">@{user.username}</p>
                 {user.status && (
                   <div className="user-status">

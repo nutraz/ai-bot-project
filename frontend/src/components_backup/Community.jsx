@@ -112,7 +112,7 @@ function Community() {
       <div className="container">
         {/* Header */}
         <div className="community-header">
-          <h1>Web3 Community</h1>
+          <h1 className="text-2xl font-bold my-4">Web3 Community</h1>
           <p>Connect with developers, share knowledge, and build the future together</p>
         </div>
 

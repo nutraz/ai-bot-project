@@ -156,7 +156,7 @@ function Home() {
                 <span>Multichain • Cross-Platform • Decentralized</span>
                 <div className="badge-glow"></div>
               </div>
-              <h1 className="hero-title">
+              <h1 className="hero-title text-2xl font-bold my-4">
                 The Ultimate
                 <span className="gradient-text"> Multichain Development</span>
                 Platform

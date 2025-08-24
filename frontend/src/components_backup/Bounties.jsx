@@ -255,7 +255,7 @@ function Bounties() {
       <div className="container">
         <div className="page-header">
           <div className="header-content">
-            <h1>Bounties</h1>
+            <h1 className="text-2xl font-bold my-4">Bounties</h1>
             <p>Discover development opportunities and create bounties for your projects</p>
           </div>
           <button 

@@ -283,7 +283,7 @@ function Storage() {
       <div className="container">
         <div className="page-header">
           <div className="header-content">
-            <h1>IPFS Storage</h1>
+            <h1 className="text-2xl font-bold my-4">IPFS Storage</h1>
             <p>Manage your decentralized file storage with IPFS integration</p>
           </div>
           <button 

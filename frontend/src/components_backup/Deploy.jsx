@@ -288,7 +288,7 @@ function Deploy() {
       <div className="container">
         <div className="page-header">
           <div className="header-content">
-            <h1>Deployments</h1>
+            <h1 className="text-2xl font-bold my-4">Deployments</h1>
             <p>Manage and monitor your smart contract deployments across multiple networks</p>
           </div>
           <button 

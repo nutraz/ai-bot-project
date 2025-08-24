@@ -305,7 +305,7 @@ function Tokens() {
     <div className="tokens-page">
       <div className="container">
         <div className="page-header">
-          <h1>Token Management</h1>
+          <h1 className="text-2xl font-bold my-4">Token Management</h1>
           <p>Manage your portfolio, stake tokens, and track your earnings</p>
         </div>
 

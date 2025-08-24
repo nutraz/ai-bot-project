@@ -114,7 +114,7 @@ function Profile() {
               <img src={user.avatar} alt={user.name} className="profile-avatar" />
               <div className="profile-details">
                 <div className="profile-name-section">
-                  <h1>{user.name}</h1>
+                  <h1 className="text-2xl font-bold my-4">{user.name}</h1>
                   <p className="username">@{user.username}</p>
                   <button className="edit-profile-btn">
                     <Settings size={16} />

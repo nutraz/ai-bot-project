@@ -77,7 +77,7 @@ function Dashboard() {
         {/* Welcome Section */}
         <div className="dashboard-welcome">
           <div className="welcome-content">
-            <h1>Welcome back, {user.name}!</h1>
+            <h1 className="text-2xl font-bold my-4">Welcome back, {user.name}!</h1>
             <p>Here's what's happening with your projects and earnings</p>
           </div>
           <Link to="/create" className="btn-primary">

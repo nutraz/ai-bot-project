@@ -257,7 +257,7 @@ function Repositories() {
         <div className="repositories-header">
           <div className="header-content">
             <div className="header-text">
-              <h1>Repositories</h1>
+              <h1 className="text-2xl font-bold my-4">Repositories</h1>
               <p>Explore cutting-edge blockchain projects and manage your code</p>
             </div>
             {isAuthenticated && (

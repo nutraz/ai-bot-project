@@ -414,7 +414,7 @@ contract YieldFarm is ReentrancyGuard, Ownable {
                 {owner}
               </button>
               <span className="path-separator">/</span>
-              <h1 className="repo-name">{repository.name}</h1>
+              <h1 className="repo-name text-2xl font-bold my-4">{repository.name}</h1>
               <span className="repo-visibility">{repository.isPrivate ? 'Private' : 'Public'}</span>
             </div>
             <div className="repo-actions">

@@ -398,7 +398,7 @@ function Governance() {
       <div className="container">
         <div className="page-header">
           <div className="header-content">
-            <h1>Governance</h1>
+            <h1 className="text-2xl font-bold my-4">Governance</h1>
             <p>Participate in OpenKey's decentralized governance by voting on proposals</p>
           </div>
           <button 

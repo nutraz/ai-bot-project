@@ -381,7 +381,7 @@ function RepoCreate() {
     <div className="repo-create">
       <div className="container">
         <div className="create-header">
-          <h1>Create New Repository</h1>
+          <h1 className="text-2xl font-bold my-4">Create New Repository</h1>
           <p>Set up a new multichain development project</p>
         </div>
 
