@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend/src/icp-hub-frontend && npm install && npm run build",
+  "outputDirectory": "frontend/src/icp-hub-frontend/dist",
+  "installCommand": "npm install",
+  "framework": null
+}
