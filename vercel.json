@@ -3,5 +3,13 @@
   "buildCommand": "cd frontend/src/icp-hub-frontend && npm install && npm run build",
   "outputDirectory": "frontend/src/icp-hub-frontend/dist",
   "installCommand": "npm install",
-  "framework": null
+  "framework": null,
+  "build": {
+    "env": {
+      "VITE_DFX_NETWORK": "ic",
+      "VITE_API_URL": "https://ic0.app",
+      "VITE_BACKEND_CANISTER_ID": "uxrrr-q7777-77774-qaaaq-cai",
+      "VITE_INTERNET_IDENTITY_CANISTER_ID": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    }
+  }
 }
