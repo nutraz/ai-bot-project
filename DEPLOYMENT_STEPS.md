@@ -29,8 +29,12 @@ These steps will help others understand, use, and contribute to your project.
 
    - Go to https://vercel.com/import
    - Import your GitHub repo
+   - **IMPORTANT:** Set Root Directory to `frontend/` (not the monorepo root)
+   - Set Framework Preset to "Vite" or "Other"
    - Set environment variables if needed (ICP canister IDs, etc.)
    - Deploy and get your public URL (e.g., https://ai-bot-project.vercel.app)
+   
+   > ⚠️ **Monorepo Configuration:** This project has a monorepo structure. The main frontend app is in `frontend/`, not the root directory. See the "Vercel Monorepo Deployment" section below for detailed configuration steps.
 
 3. **(Optional) Deploy to Netlify**
 
@@ -41,6 +45,14 @@ These steps will help others understand, use, and contribute to your project.
 4. **Test your public link on any device**
 
 5. **Share your public link with users**
+
+---
+
+## 🚨 Common Deployment Issues
+
+- **[Vercel Monorepo Root Directory Configuration](#vercel-monorepo-deployment-root-directory-configuration)** - Fix "Framework not detected" or Next.js build errors
+- **[Vercel Build Error: `vite: command not found`](#vercel-build-error-vite-command-not-found)** - Missing Vite dependency
+- **[Prisma/PostgreSQL Authentication Error](#prismappostgresql-authentication-error)** - Database connection issues
 
 ---
 
@@ -151,6 +163,42 @@ It means you tried to push the `main` branch, but your repo is still on `master`
    ```
 
 If you see `nothing to commit`, make sure you have added files with `git add .` before committing.
+
+---
+
+## Vercel Monorepo Deployment: Root Directory Configuration
+
+**Problem:** Vercel tries to build your project as a Next.js app from the monorepo root, but your main user-facing app is in `frontend/` (Vite/React), not in the root or `chadnext/`. Vercel expects a `next` dependency in the root `package.json`, but your Next.js template is not the main app.
+
+**Solution:** Set the correct Vercel project root directory configuration.
+
+### For the Main Frontend App (Vite/React):
+
+1. **In Vercel Dashboard:**
+   - Go to your project settings
+   - Navigate to **General → Build & Development Settings**
+   - Set **Root Directory** to `frontend/`
+   - Make sure **Framework Preset** is set to "Vite" or "Other"
+
+2. **Verify your `frontend/package.json`:**
+   - Should NOT have `"next"` as a dependency
+   - Should have `"vite"` in `devDependencies`
+   - Build command should be `vite build`
+   - Output directory will be `frontend/dist/`
+
+### For the Next.js Template (if you want to deploy chadnext/):
+
+1. **In Vercel Dashboard:**
+   - Set **Root Directory** to `chadnext/`
+   - Set **Framework Preset** to "Next.js"
+   - Ensure `chadnext/package.json` has a valid Next.js setup
+
+### Key Points:
+
+- **No code changes needed** in your repository
+- **No `.env` file changes required**
+- This is purely a **Vercel dashboard configuration** issue
+- The monorepo root should NOT be used as the deployment target
 
 ---
 
