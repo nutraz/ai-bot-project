@@ -35,8 +35,14 @@ These steps will help others understand, use, and contribute to your project.
 3. **(Optional) Deploy to Netlify**
 
    - Go to https://app.netlify.com/start
-   - Connect your repo, set build command and publish directory (`dist` if using static export)
+   - Connect your repo
+   - The deployment will use the `netlify.toml` configuration file included in the repository
    - Deploy and get your public URL
+
+   **Important:** If you see a plugin error related to "@21yunbox/netlify-plugin-21yunbox-deploy-to-china-cdn":
+   - Go to your Netlify site settings → Plugins
+   - Remove the "21yunbox" plugin (it requires a paid account)
+   - Re-deploy your site
 
 4. **Test your public link on any device**
 
@@ -258,5 +264,21 @@ To ensure Prisma applies schema migrations on every Vercel build, update your bu
 3. Redeploy on Vercel.
 
 > Now, every Vercel build will apply Prisma migrations automatically.
+
+---
+
+## Netlify Plugin Issues
+
+If you encounter plugin-related deployment failures on Netlify (like the "21yunbox" plugin error), follow these steps:
+
+1. **Go to your Netlify site dashboard**
+2. **Navigate to Site settings → Plugins**
+3. **Remove any problematic plugins** (especially third-party plugins requiring paid accounts)
+4. **Re-deploy your site**
+
+**Common problematic plugins:**
+- `@21yunbox/netlify-plugin-21yunbox-deploy-to-china-cdn` - Requires paid 21YunBox account
+
+The repository includes a `netlify.toml` configuration file that provides all necessary build settings without requiring additional plugins.
 
 ---
