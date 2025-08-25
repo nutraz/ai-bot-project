@@ -4,3 +4,8 @@ dist
 build
 canister_ids.json
 .DS_Store
+
+# Prevent pnpm leftover files that can interfere with builds
+*@*.*.*
+npm
+vite
