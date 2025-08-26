@@ -9,6 +9,7 @@ import CreateRepositoryPage from './pages/CreateRepositoryPage'
 import ProfilePage from './pages/ProfilePage'
 import NotificationsPage from './pages/NotificationsPage'
 import SearchPage from './pages/SearchPage'
+import DeployPage from './pages/DeployPage'
 import authService from './services/auth'
 import './App.css'
 
@@ -53,6 +54,7 @@ function App() {
           <Route path="/repositories" element={<RepositoriesPage />} />
           <Route path="/repo/:id" element={<RepositoryDetailPage />} />
           <Route path="/repo/create" element={<CreateRepositoryPage />} />
+          <Route path="/deploy" element={<DeployPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/search" element={<SearchPage />} />

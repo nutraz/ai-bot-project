@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, User, LogOut, Bell, Search, GitBranch } from 'lucide-react'
+import { Menu, X, User, LogOut, Bell, Search, GitBranch, Rocket } from 'lucide-react'
 import authService from '../services/auth'
 import Notification from './Notification'
 import LoginModal from './Auth/LoginModal'
@@ -74,6 +74,10 @@ const Header = () => {
             <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
               Repositories
             </Link>
+            <Link to="/deploy" className="text-gray-700 hover:text-gray-900 font-medium flex items-center space-x-1">
+              <Rocket size={16} />
+              <span>Deploy</span>
+            </Link>
             {isAuthenticated && (
               <>
                 <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
@@ -141,6 +145,14 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Repositories
+              </Link>
+              <Link 
+                to="/deploy" 
+                className="text-gray-700 hover:text-gray-900 font-medium flex items-center space-x-1"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Rocket size={16} />
+                <span>Deploy</span>
               </Link>
               {isAuthenticated ? (
                 <>
