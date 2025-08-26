@@ -440,6 +440,17 @@
 		"ghcr.io/mrsimonemms/devcontainers/buf:1": {},
 		"ghcr.io/mrsimonemms/devcontainers/cobra-cli:1": {},
 		"ghcr.io/mrsimonemms/devcontainers/tcld:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"GitHub.vscode-pull-request-github",
+				"mtxr.sqltools",
+				"donjayamanne.githistory",
+				"ms-vscode-remote.remote-containers",
+				"denoland.vscode-deno"
+			]
+		}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
