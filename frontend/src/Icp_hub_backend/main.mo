@@ -322,6 +322,17 @@ persistent actor ICPHub {
   public shared ({ caller }) func registerUser(
     request : RegisterUserRequest
   ) : async Result<User, Error> {
+    // Apply rate limiting to registration attempts
+    let config : Auth.RateLimitConfig = {
+      maxRequests = 5; // Allow 5 registration attempts
+      windowSeconds = 3600; // per hour
+      identifier = Principal.toText(caller);
+    };
+
+    if (not Auth.checkRateLimit(config.identifier, config, authRateLimitStore)) {
+      return #Err(#BadRequest("Too many registration attempts. Please wait an hour before trying again."));
+    };
+
     userManager.registerUser(caller, request)
   };
 
@@ -818,7 +829,21 @@ persistent actor ICPHub {
 
   // AUTHENTICATION APIs
 
+  // Rate limiting for authentication endpoints
+  private transient var authRateLimitStore = HashMap.HashMap<Text, Auth.RateLimitEntry>(100, Text.equal, Text.hash);
+
   public shared ({ caller }) func login() : async Result<SessionToken, Error> {
+    // Apply rate limiting to login attempts
+    let config : Auth.RateLimitConfig = {
+      maxRequests = 10; // Allow 10 login attempts
+      windowSeconds = 300; // per 5 minutes
+      identifier = Principal.toText(caller);
+    };
+
+    if (not Auth.checkRateLimit(config.identifier, config, authRateLimitStore)) {
+      return #Err(#BadRequest("Too many login attempts. Please wait 5 minutes before trying again."));
+    };
+
     if (Principal.isAnonymous(caller)) {
       return #Err(#Unauthorized("Anonymous principals cannot login"));
     };

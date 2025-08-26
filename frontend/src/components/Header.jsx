@@ -29,15 +29,11 @@ const Header = () => {
   }, [])
 
   const handleLogin = async () => {
-    try {
-      await authService.login()
-      setIsAuthenticated(true)
-      setPrincipal(authService.getPrincipal())
-      setIsLoginModalOpen(false)
-      showNotificationMessage('Login successful!')
-    } catch (error) {
-      showNotificationMessage('Login failed. Please try again.')
-    }
+    await authService.login()
+    setIsAuthenticated(true)
+    setPrincipal(authService.getPrincipal())
+    setIsLoginModalOpen(false)
+    showNotificationMessage('Login successful!')
   }
 
   const handleLogout = async () => {
