@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
+import Marketplace from './pages/Marketplace'
+import Tokenomics from './pages/Tokenomics'
+import Enterprise from './pages/Enterprise'
+import ChainFusion from './pages/ChainFusion'
+import GovernancePage from './pages/GovernancePage'
+import RevenuePage from './pages/RevenuePage'
 import RepositoriesPage from './pages/RepositoriesPage'
 import RepositoryDetailPage from './pages/RepositoryDetailPage'
 import CreateRepositoryPage from './pages/CreateRepositoryPage'
 import ProfilePage from './pages/ProfilePage'
 import NotificationsPage from './pages/NotificationsPage'
 import SearchPage from './pages/SearchPage'
+import SearchAdmin from './pages/SearchAdmin'
 import authService from './services/auth'
 import './App.css'
 
@@ -56,6 +63,13 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/governance" element={<GovernancePage />} />
+          <Route path="/revenue" element={<RevenuePage />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/tokenomics" element={<Tokenomics />} />
+          <Route path="/enterprise" element={<Enterprise />} />
+          <Route path="/chainfusion" element={<ChainFusion />} />
+          <Route path="/search-admin" element={isAuthenticated ? <SearchAdmin /> : <Navigate to="/profile" replace />} />
         </Routes>
       </main>
       <Footer />

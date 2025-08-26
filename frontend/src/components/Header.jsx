@@ -71,18 +71,16 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
-              Repositories
-            </Link>
+            <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">Repositories</Link>
+            <Link to="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">Dashboard</Link>
+            <Link to="/governance" className="text-gray-700 hover:text-gray-900 font-medium">Governance</Link>
+            <Link to="/revenue" className="text-gray-700 hover:text-gray-900 font-medium">Revenue</Link>
+            <Link to="/marketplace" className="text-gray-700 hover:text-gray-900 font-medium">Marketplace</Link>
+            <Link to="/tokenomics" className="text-gray-700 hover:text-gray-900 font-medium">Tokenomics</Link>
+            <Link to="/enterprise" className="text-gray-700 hover:text-gray-900 font-medium">Enterprise</Link>
+            <Link to="/chainfusion" className="text-gray-700 hover:text-gray-900 font-medium">Chain Fusion</Link>
             {isAuthenticated && (
-              <>
-                <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Dashboard
-                </Link>
-                <Link to="/repo/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
-                  New Repository
-                </Link>
-              </>
+              <Link to="/repo/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">New Repository</Link>
             )}
           </div>
 
@@ -141,6 +139,20 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Repositories
+              </Link>
+              <Link 
+                to="/governance" 
+                className="text-gray-700 hover:text-gray-900 font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Governance
+              </Link>
+              <Link 
+                to="/revenue" 
+                className="text-gray-700 hover:text-gray-900 font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Revenue
               </Link>
               {isAuthenticated ? (
                 <>

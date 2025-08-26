@@ -1,0 +1,40 @@
+name: Full CI
+
+on:
+  push:
+    branches: [main, master, my-update-branch]
+  pull_request:
+    branches: [main, master, my-update-branch]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm test
+      - name: Run coverage
+        run: pnpm run test:coverage
+      - name: Enforce coverage threshold
+        run: |
+          npx jest --coverage --coverageThreshold='{"global":{"branches":50,"functions":40,"lines":50,"statements":50}}'
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install DFX
+        run: |
+            echo "No Motoko tests found."
+          fi

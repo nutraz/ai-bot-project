@@ -1,0 +1,67 @@
+# This workflow runs tests and reports coverage for the frontend on every push and pull request.
+# It also builds the Vite app and can be extended for deployment.
+
+name: CI/CD Frontend
+
+on:
+  push:
+    branches: [ main, master, my-update-branch ]
+  pull_request:
+    branches: [ main, master, my-update-branch ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run coverage
+        run: pnpm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Vite app
+        run: pnpm run build
+
+      # Uncomment and configure the following for deployment (e.g., Vercel, Netlify, or custom server)
+      # - name: Deploy
+      #   run: echo "Add your deployment script here"
