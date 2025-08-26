@@ -21,6 +21,36 @@ These steps will help others understand, use, and contribute to your project.
 
 # Deploy OpenKeyHub (ai-bot-project) for Public Access
 
+## ✨ New Features Added
+
+### 🚀 Deployment Dashboard
+OpenKeyHub now includes a comprehensive deployment dashboard accessible at `/deploy` with:
+
+- **Real-time deployment statistics** (Deployed, Pending, Failed, Networks)
+- **Multi-chain deployment support** (Ethereum, Polygon, BSC, Avalanche, Arbitrum, Internet Computer)
+- **Advanced filtering** by repository, chain, and status
+- **Deployment cards** with contract addresses, gas usage, and blockchain explorer links
+- **Retry functionality** for failed deployments
+- **Real-time status monitoring**
+
+### 📋 Deployment Form
+The new deployment form provides:
+- Repository selection from available projects
+- Target network selection (6 supported blockchains)
+- Contract file selection
+- Gas limit configuration
+- Real-time validation and feedback
+
+### 🔧 Technical Improvements
+- **Deployment Service Layer**: Comprehensive service for managing deployments
+- **Backend Integration Ready**: Designed to work with Motoko IC canisters
+- **Enhanced Vercel Config**: Optimized build process and caching
+- **Modern UI Components**: Professional dashboard with responsive design
+
+---
+
+## Public Deployment Steps
+
 1. **Push your code to GitHub**
 
    - Repo: https://github.com/nutraz/ai-bot-project
