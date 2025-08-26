@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { mockDeployments, mockRepositories, supportedChains } from '../data/dummyData'
+import deploymentService from '../services/deployment'
 import { 
   Rocket, 
   Clock, 
@@ -16,16 +17,53 @@ import {
   Filter,
   Plus,
   GitBranch,
-  Server
+  Server,
+  Loader2
 } from 'lucide-react'
 
 function DeployPage() {
-  const [deployments] = useState(mockDeployments)
+  const [deployments, setDeployments] = useState(mockDeployments)
   const [repositories] = useState(mockRepositories)
   const [selectedRepo, setSelectedRepo] = useState('')
   const [selectedChain, setSelectedChain] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showDeployForm, setShowDeployForm] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
+  const [deploymentForm, setDeploymentForm] = useState({
+    repository: '',
+    targetChain: '',
+    contractFile: '',
+    gasLimit: '3000000'
+  })
+
+  // Load deployments on component mount
+  useEffect(() => {
+    const loadDeployments = async () => {
+      try {
+        const result = await deploymentService.getDeployments()
+        if (result.success) {
+          // Merge with mock data for now
+          setDeployments([...mockDeployments, ...result.deployments])
+        }
+      } catch (error) {
+        console.error('Failed to load deployments:', error)
+      }
+    }
+    
+    loadDeployments()
+  }, [])
+
+  const formatTimeAgo = (timestamp) => {
+    if (!timestamp) return 'N/A'
+    const diff = Date.now() - new Date(timestamp).getTime()
+    const minutes = Math.floor(diff / (1000 * 60))
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    
+    if (minutes < 60) return `${minutes}m ago`
+    if (hours < 24) return `${hours}h ago`
+    return `${days}d ago`
+  }
 
   const filteredDeployments = deployments.filter(deployment => {
     const matchesRepo = !selectedRepo || deployment.repository === selectedRepo
@@ -70,16 +108,88 @@ function DeployPage() {
     return <span className="text-lg">{chain?.icon || '⚪'}</span>
   }
 
-  const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return 'N/A'
-    const diff = Date.now() - new Date(timestamp).getTime()
-    const minutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const handleDeploy = async (e) => {
+    e.preventDefault()
     
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    return `${days}d ago`
+    if (!deploymentForm.repository || !deploymentForm.targetChain) {
+      alert('Please select a repository and target chain')
+      return
+    }
+
+    setIsDeploying(true)
+
+    try {
+      const deploymentRequest = {
+        repositoryId: deploymentForm.repository,
+        contractPath: deploymentForm.contractFile || 'contracts/main.sol',
+        targetChain: deploymentForm.targetChain,
+        network: 'testnet',
+        gasLimit: parseInt(deploymentForm.gasLimit)
+      }
+
+      const result = await deploymentService.deployContract(deploymentRequest)
+
+      if (result.success) {
+        // Subscribe to deployment updates
+        deploymentService.subscribeToDeployment(result.deploymentId, (status) => {
+          // Update local state when deployment status changes
+          setDeployments(prev => prev.map(d => 
+            d.id === result.deploymentId ? { ...d, ...status } : d
+          ))
+        })
+
+        // Add new deployment to list
+        const newDeployment = {
+          id: result.deploymentId,
+          repository: deploymentForm.repository,
+          chain: deploymentForm.targetChain,
+          status: 'deploying',
+          txHash: result.transactionHash,
+          deployer: 'current_user',
+          deployedAt: '',
+          contractAddress: '',
+          gasUsed: '',
+          version: 'v1.0.0'
+        }
+
+        setDeployments(prev => [newDeployment, ...prev])
+        setShowDeployForm(false)
+        setDeploymentForm({
+          repository: '',
+          targetChain: '',
+          contractFile: '',
+          gasLimit: '3000000'
+        })
+
+        alert('Deployment initiated successfully! Monitor the progress below.')
+      } else {
+        alert(`Deployment failed: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Deployment error:', error)
+      alert(`Deployment failed: ${error.message}`)
+    } finally {
+      setIsDeploying(false)
+    }
+  }
+
+  const handleRetryDeployment = async (deploymentId) => {
+    try {
+      const result = await deploymentService.retryDeployment(deploymentId)
+      
+      if (result.success) {
+        // Update deployment status
+        setDeployments(prev => prev.map(d => 
+          d.id === deploymentId ? { ...d, status: 'deploying', txHash: result.transactionHash } : d
+        ))
+        alert('Deployment retry initiated successfully!')
+      } else {
+        alert(`Retry failed: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Retry error:', error)
+      alert(`Retry failed: ${error.message}`)
+    }
   }
 
   const renderDeploymentCard = (deployment) => {
@@ -158,7 +268,10 @@ function DeployPage() {
           )}
           
           {deployment.status === 'failed' && (
-            <button className="flex items-center space-x-1 px-3 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+            <button 
+              className="flex items-center space-x-1 px-3 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              onClick={() => handleRetryDeployment(deployment.id)}
+            >
               <RefreshCw size={16} />
               <span>Retry Deploy</span>
             </button>
@@ -192,10 +305,15 @@ function DeployPage() {
         </button>
       </div>
 
-      <div className="space-y-4">
+      <form onSubmit={handleDeploy} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Repository *</label>
-          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <select 
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={deploymentForm.repository}
+            onChange={(e) => setDeploymentForm(prev => ({ ...prev, repository: e.target.value }))}
+            required
+          >
             <option value="">Select repository</option>
             {repositories.map(repo => (
               <option key={repo.id} value={repo.name}>{repo.name}</option>
@@ -205,7 +323,12 @@ function DeployPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Target Network *</label>
-          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <select 
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={deploymentForm.targetChain}
+            onChange={(e) => setDeploymentForm(prev => ({ ...prev, targetChain: e.target.value }))}
+            required
+          >
             <option value="">Select network</option>
             {supportedChains.map(chain => (
               <option key={chain.id} value={chain.id}>
@@ -217,7 +340,11 @@ function DeployPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Contract File</label>
-          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <select 
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={deploymentForm.contractFile}
+            onChange={(e) => setDeploymentForm(prev => ({ ...prev, contractFile: e.target.value }))}
+          >
             <option value="">Select contract file</option>
             <option value="contracts/Token.sol">contracts/Token.sol</option>
             <option value="contracts/NFT.sol">contracts/NFT.sol</option>
@@ -231,22 +358,38 @@ function DeployPage() {
             type="number" 
             placeholder="3000000"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={deploymentForm.gasLimit}
+            onChange={(e) => setDeploymentForm(prev => ({ ...prev, gasLimit: e.target.value }))}
           />
         </div>
 
         <div className="flex items-center space-x-3 pt-4">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <Rocket size={16} />
-            <span>Deploy Contract</span>
+          <button 
+            type="submit"
+            disabled={isDeploying}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeploying ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Deploying...</span>
+              </>
+            ) : (
+              <>
+                <Rocket size={16} />
+                <span>Deploy Contract</span>
+              </>
+            )}
           </button>
           <button 
+            type="button"
             className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             onClick={() => setShowDeployForm(false)}
           >
             Cancel
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 
