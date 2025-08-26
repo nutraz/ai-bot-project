@@ -8,5 +8,8 @@
     "@dfinity/candid": "3.2.2",
     "@dfinity/identity": "3.2.2",
     "@dfinity/principal": "3.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
