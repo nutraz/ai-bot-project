@@ -36,9 +36,6 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
-      '@babel/preset-env':
-        specifier: ^7.28.3
-        version: 7.28.3(@babel/core@7.28.3)
       '@babel/preset-react':
         specifier: ^7.27.1
         version: 7.27.1(@babel/core@7.28.3)
@@ -50,16 +47,16 @@ importers:
         version: 6.8.0
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.1.7(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.1.8(@types/react@19.1.11))(@types/react@19.1.11)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@types/react':
         specifier: ^19.1.11
         version: 19.1.11
       '@types/react-dom':
         specifier: ^19.1.7
-        version: 19.1.7(@types/react@19.1.11)
+        version: 19.1.8(@types/react@19.1.11)
       '@vitejs/plugin-react':
         specifier: ^5.0.1
-        version: 5.0.1(vite@7.1.3(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1))
+        version: 5.0.1(vite@7.1.3(jiti@2.5.1)(lightningcss@1.30.1))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
@@ -104,7 +101,11 @@ importers:
         version: 4.1.12
       vite:
         specifier: ^7.1.3
+<<<<<<< HEAD
         version: 7.1.3(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)
+=======
+        version: 7.1.3(jiti@2.5.1)(lightningcss@1.30.1)
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
 
 packages:
 
@@ -1451,6 +1452,7 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+<<<<<<< HEAD
   '@types/node@22.7.5':
     resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
 
@@ -1459,6 +1461,10 @@ packages:
 
   '@types/react-dom@19.1.7':
     resolution: {integrity: sha512-i5ZzwYpqjmrKenzkoLM2Ibzt6mAsM7pxB6BCIouEVVmgiqaMj1TjaK7hnA36hbW5aZv20kx7Lw6hWzPWg0Rurw==}
+=======
+  '@types/react-dom@19.1.8':
+    resolution: {integrity: sha512-xG7xaBMJCpcK0RpN8jDbAACQo54ycO6h4dSSmgv8+fu6ZIAdANkx/WsawASUjVXYfy+J9AbUpRMNNEsXCDfDBQ==}
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
     peerDependencies:
       '@types/react': ^19.0.0
 
@@ -2060,6 +2066,7 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
+<<<<<<< HEAD
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
@@ -2072,6 +2079,10 @@ packages:
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
     engines: {node: '>=12'}
+=======
+  electron-to-chromium@1.5.209:
+    resolution: {integrity: sha512-Xoz0uMrim9ZETCQt8UgM5FxQF9+imA7PBpokoGcZloA1uw2LeHzTlip5cb5KOAsXZLjh/moN2vReN3ZjJmjI9A==}
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -2186,12 +2197,9 @@ packages:
     peerDependencies:
       jiti: '*'
     peerDependenciesMeta:
-      jiti:
-        optional: true
-
-  espree@10.4.0:
-    resolution: {integrity: sha512-j6PAQ2uUr79PZhBjP5C5fhl8e39FmRnOjsD5lGnWrFU8i2G776tBK7+nP8KuQUTTyAZUwfQqXAgrVH5MbH9CYQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+      vite:
+        specifier: ^7.1.3
+        version: 7.1.3(jiti@2.5.1)(lightningcss@1.30.1)
 
   esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
@@ -3006,6 +3014,7 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
+<<<<<<< HEAD
   lodash.once@4.1.1:
     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
 
@@ -3020,6 +3029,8 @@ packages:
     resolution: {integrity: sha512-9fkkDevMefjg0mmzWFBW8YkFP91OrizzkW3diF7CpG+S2EYdy4+TVfGwz1zeF8x7hCx1ovSPTOE9Ngib74qqUg==}
     engines: {node: '>=10'}
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
@@ -3416,6 +3427,7 @@ packages:
     resolution: {integrity: sha512-U7WjGVG9sH8tvjW5SmGbQuui75FiyjAX72HX15DwBBwF9dNiQZRQAg9nnPhYy+TUnE0+VcrttuvNI8oSxZcocA==}
     hasBin: true
 
+<<<<<<< HEAD
   restore-cursor@3.1.0:
     resolution: {integrity: sha512-l+sSefzHpj5qimhFSE5a8nufZYAM3sBSVMAPtYkmC+4EH2anSGaEMXSD0izRQbu9nfyQ9y5JrVmp7E8oZrUjvA==}
     engines: {node: '>=8'}
@@ -3423,6 +3435,8 @@ packages:
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   rollup@4.48.1:
     resolution: {integrity: sha512-jVG20NvbhTYDkGAty2/Yh7HK6/q3DGSRH4o8ALKGArmMuaauM9kLfoMZ+WliPwA5+JHr2lTn3g557FxBV87ifg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -3734,6 +3748,7 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
+<<<<<<< HEAD
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
@@ -3767,6 +3782,8 @@ packages:
     resolution: {integrity: sha512-KK8xQ1mkzZeg9inewmFVDNkg3l5LUhoq9kN6iWYB/CC9YMG8HA+c1Q8HwDe6dEX7kErrEVNVBO3fWsVq5iDgtw==}
     engines: {node: '>=8'}
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   update-browserslist-db@1.1.3:
     resolution: {integrity: sha512-UxhIZQ+QInVdunkDAaiazvvT/+fXL5Osr0JZlJulepYu6Jd7qJtDZjlur0emRlT71EN3ScPoE7gvsuIKKNavKw==}
     hasBin: true
@@ -5470,6 +5487,7 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+<<<<<<< HEAD
   '@types/node@22.7.5':
     dependencies:
       undici-types: 6.19.8
@@ -5479,6 +5497,9 @@ snapshots:
       undici-types: 7.10.0
 
   '@types/react-dom@19.1.7(@types/react@19.1.11)':
+=======
+  '@types/react-dom@19.1.8(@types/react@19.1.11)':
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
     dependencies:
       '@types/react': 19.1.11
 
@@ -5486,6 +5507,7 @@ snapshots:
     dependencies:
       csstype: 3.1.3
 
+<<<<<<< HEAD
   '@types/sinonjs__fake-timers@8.1.1': {}
 
   '@types/sizzle@2.3.10': {}
@@ -5567,6 +5589,9 @@ snapshots:
     optional: true
 
   '@vitejs/plugin-react@5.0.1(vite@7.1.3(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1))':
+=======
+  '@vitejs/plugin-react@5.0.1(vite@7.1.3(jiti@2.5.1)(lightningcss@1.30.1))':
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
     dependencies:
       '@babel/core': 7.28.3
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.3)
@@ -5574,7 +5599,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.32
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
+<<<<<<< HEAD
       vite: 7.1.3(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)
+=======
+      vite: 7.1.3(jiti@2.5.1)(lightningcss@1.30.1)
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
     transitivePeerDependencies:
       - supports-color
 
@@ -6107,6 +6136,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
+<<<<<<< HEAD
   eastasianwidth@0.2.0: {}
 
   ecc-jsbn@0.1.2:
@@ -6117,6 +6147,9 @@ snapshots:
   electron-to-chromium@1.5.209: {}
 
   emittery@0.13.1: {}
+=======
+  electron-to-chromium@1.5.209: {}
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
 
   emoji-regex@8.0.0: {}
 
@@ -7393,6 +7426,7 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
+<<<<<<< HEAD
   lodash.once@4.1.1: {}
 
   lodash@4.17.21: {}
@@ -7409,6 +7443,8 @@ snapshots:
       slice-ansi: 4.0.0
       wrap-ansi: 6.2.0
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -7777,6 +7813,7 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
+<<<<<<< HEAD
   restore-cursor@3.1.0:
     dependencies:
       onetime: 5.1.2
@@ -7784,6 +7821,8 @@ snapshots:
 
   rfdc@1.4.1: {}
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   rollup@4.48.1:
     dependencies:
       '@types/estree': 1.0.8
@@ -8166,6 +8205,7 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
+<<<<<<< HEAD
   undici-types@6.19.8: {}
 
   undici-types@7.10.0: {}
@@ -8209,6 +8249,8 @@ snapshots:
 
   untildify@4.0.0: {}
 
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
   update-browserslist-db@1.1.3(browserslist@4.25.3):
     dependencies:
       browserslist: 4.25.3
@@ -8219,6 +8261,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+<<<<<<< HEAD
   uuid@8.3.2: {}
 
   v8-to-istanbul@9.3.0:
@@ -8234,6 +8277,9 @@ snapshots:
       extsprintf: 1.3.0
 
   vite@7.1.3(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1):
+=======
+  vite@7.1.3(jiti@2.5.1)(lightningcss@1.30.1):
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
@@ -8242,10 +8288,10 @@ snapshots:
       rollup: 4.48.1
       tinyglobby: 0.2.14
     optionalDependencies:
-      '@types/node': 24.3.0
       fsevents: 2.3.3
       jiti: 2.5.1
       lightningcss: 1.30.1
+<<<<<<< HEAD
 
   w3c-xmlserializer@5.0.0:
     dependencies:
@@ -8267,6 +8313,8 @@ snapshots:
     dependencies:
       tr46: 5.1.1
       webidl-conversions: 7.0.0
+=======
+>>>>>>> 1efdeb5 (Checkpoint from VS Code for coding agent session)
 
   which-boxed-primitive@1.1.1:
     dependencies:
