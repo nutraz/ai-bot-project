@@ -44,7 +44,7 @@ pnpm dev
 # or
 npm run dev
 ```
-_Open your browser to the displayed local address (e.g., http://localhost:5173). If port is busy, check for other processes or change the port._
+_Open your browser to the displayed local address (e.g., http://localhost:5175). If port is busy, you can set a custom port using `VITE_PORT=5173 npm run dev` or check for other processes._
 
 ## 7. Test Interactions
 - Interact with your canister through the frontend.

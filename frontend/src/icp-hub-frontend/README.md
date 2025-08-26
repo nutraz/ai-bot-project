@@ -68,7 +68,7 @@ src/icp-hub-frontend/
    npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:5175` (or the port shown in terminal)
 
 ## 📜 Available Scripts
 

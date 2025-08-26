@@ -9,7 +9,7 @@ export default defineConfig({
   // Example: set BASE_PATH=/ai-bot-project/ in CI.
   base: process.env.BASE_PATH || '/',
   server: {
-    port: 5173,
+    port: process.env.VITE_PORT || 5175,
     host: true,
     proxy: {
       '/api': {

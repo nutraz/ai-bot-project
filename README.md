@@ -23,6 +23,12 @@ cd frontend
 npm install
 ```
 
+## Port Configuration
+The frontend dev server runs on port 5175 by default. To use a different port:
+```
+VITE_PORT=5173 npm run dev
+```
+
 Configure environment variables:
 See DEPLOYMENT_STEPS.md for required .env settings
 

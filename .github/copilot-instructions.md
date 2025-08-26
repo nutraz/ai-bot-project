@@ -12,7 +12,7 @@
 - **Build frontend:**
   - `cd frontend && pnpm build`
 - **Dev server:**
-  - `cd frontend && pnpm dev` (runs Vite on port 5173+)
+  - `cd frontend && pnpm dev` (runs Vite on port 5175 by default, configurable with VITE_PORT env var)
 - **Deploy:**
   - Vercel deploys from `frontend/` with output in `frontend/dist`.
 - **Backend (Motoko):**
