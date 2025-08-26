@@ -35,22 +35,26 @@ const server = http.createServer((req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-  console.log(`🚀 Backend development server running on http://localhost:${PORT}`);
-  console.log(`📝 This is a development placeholder for the Motoko backend`);
-  console.log(`🔧 For full IC development, use: dfx start --background && dfx deploy`);
-});
+function startServer(port, retries = 3) {
+  server.listen(port, () => {
+    console.log(`🚀 Backend development server running on http://localhost:${port}`);
+    console.log(`📝 This is a development placeholder for the Motoko backend`);
+    console.log(`🔧 For full IC development, use: dfx start --background && dfx deploy`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.log(`❌ Port ${PORT} is busy, trying port ${PORT + 1}...`);
-    setTimeout(() => {
-      server.close();
-      server.listen(PORT + 1, () => {
-        console.log(`🚀 Backend server moved to http://localhost:${PORT + 1}`);
-      });
-    }, 1000);
-  } else {
-    console.error('❌ Backend server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && retries > 0) {
+      console.log(`❌ Port ${port} is busy, trying port ${port + 1}...`);
+      server.removeAllListeners('error');
+      startServer(port + 1, retries - 1);
+    } else if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Unable to find available port after multiple attempts. Please stop other services or set PORT environment variable.`);
+      process.exit(1);
+    } else {
+      console.error('❌ Backend server error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(PORT);
