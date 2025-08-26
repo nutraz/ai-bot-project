@@ -20,13 +20,13 @@ const Features = () => (
         OpenKeyHub pairs the Internet Computer’s infinite scalability with a developer-first UX.
       </p>
       <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {features.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="group rounded-xl border bg-white p-6 hover:shadow-xl transition">
-            <div className="h-12 w-12 rounded-lg bg-blue-600/10 text-blue-700 flex items-center justify-center group-hover:scale-105 transition">
-              <Icon className="h-6 w-6" />
+        {features.map(({ icon: IconComponent, title, desc }) => (
+          <div key={title} className="group rounded-xl border bg-white p-6 hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-600/10 to-fuchsia-600/10 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <IconComponent className="h-6 w-6" />
             </div>
             <h3 className="mt-4 text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="mt-1 text-sm text-gray-600">{desc}</p>
+            <p className="mt-1 text-sm text-gray-600 leading-relaxed">{desc}</p>
           </div>
         ))}
       </div>

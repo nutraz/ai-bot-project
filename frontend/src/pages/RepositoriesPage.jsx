@@ -1,11 +1,12 @@
-
 import React, { useEffect, useState } from "react";
 import { getRepos, addRepo, removeRepo, seedDemoRepos, clearRepos } from "../lib/demoStore";
+import { PlusCircle, GitBranch, Star, Clock, Trash2, Sparkles, RotateCcw, Search } from "lucide-react";
 
 function RepositoriesPage() {
 	const [repos, setRepos] = useState([]);
 	const [name, setName] = useState("");
 	const [desc, setDesc] = useState("");
+	const [searchTerm, setSearchTerm] = useState("");
 
 	useEffect(() => {
 		setRepos(getRepos());
@@ -25,58 +26,175 @@ function RepositoriesPage() {
 		setRepos(getRepos());
 	};
 
+	const filteredRepos = repos.filter(repo => 
+		repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(repo.desc && repo.desc.toLowerCase().includes(searchTerm.toLowerCase()))
+	);
+
 	return (
-		<div className="relative min-h-screen flex flex-col items-center justify-center bg-[#101014] overflow-hidden">
-			<main className="flex flex-col items-center justify-center w-full min-h-screen px-4 py-24">
-				<div className="w-full max-w-5xl mx-auto flex flex-col items-center">
-					<h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-8 drop-shadow-2xl tracking-tight text-center" style={{letterSpacing: '-0.03em'}}>
-						<span role="img" aria-label="rocket" className="mr-2">�</span>Repositories
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+			<div className="container mx-auto px-4 py-8">
+				{/* Header Section */}
+				<div className="text-center mb-12">
+					<h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-4">
+						<GitBranch className="inline-block h-12 w-12 mr-4 text-blue-600" />
+						Repositories
 					</h1>
-					<form onSubmit={onCreate} className="mb-10 grid gap-4 md:grid-cols-3 w-full">
-						<input value={name} onChange={(e)=>setName(e.target.value)} placeholder="owner/name" className="border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all bg-white/10 text-white placeholder:text-white/60" />
-						<input value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="description (optional)" className="border rounded-lg px-4 py-3 focus:ring-2 focus:ring-fuchsia-500 focus:outline-none transition-all bg-white/10 text-white placeholder:text-white/60" />
-						<button type="submit" className="rounded-lg bg-gradient-to-r from-blue-600 to-fuchsia-600 text-white px-6 py-3 font-extrabold shadow-lg hover:from-fuchsia-600 hover:to-pink-600 hover:scale-105 transition-transform">Create</button>
-					</form>
-					<div className="flex gap-4 mb-10">
-						<button
-							onClick={() => { seedDemoRepos(); setRepos(getRepos()) }}
-							className="rounded-lg border px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white font-bold shadow-lg hover:scale-105 transition-transform"
-							title="Seed a few sample repositories"
-						>
-							<span role="img" aria-label="sparkles" className="mr-1">✨</span>Seed demo
-						</button>
-						<button
-							onClick={() => { clearRepos(); setRepos(getRepos()) }}
-							className="rounded-lg border px-4 py-2 text-base bg-gradient-to-r from-pink-500 to-blue-500 text-white font-bold shadow-lg hover:scale-105 transition-transform"
-							title="Clear local demo data"
-						>
-							<span role="img" aria-label="reset" className="mr-1">🔄</span>Reset demo
-						</button>
+					<p className="text-lg text-gray-600 max-w-2xl mx-auto">
+						Create, manage, and explore repositories on the decentralized web. 
+						All code is verifiable on-chain.
+					</p>
+				</div>
+
+				{/* Search Bar */}
+				<div className="max-w-md mx-auto mb-8">
+					<div className="relative">
+						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+						<input
+							type="text"
+							placeholder="Search repositories..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
+						/>
 					</div>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-						{repos.length === 0 && (
-							<div className="text-white/70 text-lg animate-pulse flex items-center gap-2">
-								<span role="img" aria-label="search">🔍</span>No repositories yet. Use <span className="font-bold text-blue-400">Seed demo</span> or create one above.
+				</div>
+
+				{/* Create Repository Form */}
+				<div className="max-w-4xl mx-auto mb-12">
+					<div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+						<h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+							<PlusCircle className="h-6 w-6 mr-2 text-blue-600" />
+							Create New Repository
+						</h2>
+						<form onSubmit={onCreate} className="grid gap-4 md:grid-cols-3">
+							<div>
+								<label htmlFor="repo-name" className="block text-sm font-medium text-gray-700 mb-2">Repository Name</label>
+								<input 
+									id="repo-name"
+									value={name} 
+									onChange={(e) => setName(e.target.value)} 
+									placeholder="owner/repository-name" 
+									className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+									required
+								/>
 							</div>
+							<div>
+								<label htmlFor="repo-desc" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+								<input 
+									id="repo-desc"
+									value={desc} 
+									onChange={(e) => setDesc(e.target.value)} 
+									placeholder="Brief description (optional)" 
+									className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+								/>
+							</div>
+							<div className="flex items-end">
+								<button 
+									type="submit" 
+									className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+								>
+									Create Repository
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				{/* Action Buttons */}
+				<div className="flex justify-center gap-4 mb-12">
+					<button
+						onClick={() => { seedDemoRepos(); setRepos(getRepos()) }}
+						className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+						title="Add sample repositories to explore"
+					>
+						<Sparkles className="h-5 w-5" />
+						Seed Demo Data
+					</button>
+					<button
+						onClick={() => { clearRepos(); setRepos(getRepos()) }}
+						className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+						title="Clear all repositories"
+					>
+						<RotateCcw className="h-5 w-5" />
+						Reset All
+					</button>
+				</div>
+
+				{/* Repositories Grid */}
+				{filteredRepos.length === 0 ? (
+					<div className="text-center py-16">
+						<GitBranch className="h-24 w-24 text-gray-300 mx-auto mb-6" />
+						<h3 className="text-2xl font-semibold text-gray-700 mb-2">
+							{searchTerm ? 'No repositories found' : 'No repositories yet'}
+						</h3>
+						<p className="text-gray-500 mb-8 max-w-md mx-auto">
+							{searchTerm 
+								? `No repositories match "${searchTerm}". Try a different search term.`
+								: 'Get started by creating your first repository or seeding demo data.'
+							}
+						</p>
+						{!searchTerm && (
+							<button
+								onClick={() => { seedDemoRepos(); setRepos(getRepos()) }}
+								className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+							>
+								<Sparkles className="h-5 w-5" />
+								Seed Demo Data
+							</button>
 						)}
-						{repos.map((r) => (
-							<div key={r.id} className="rounded-3xl border-2 border-gradient-to-r from-blue-400 to-fuchsia-400 bg-white/10 p-8 shadow-2xl hover:shadow-3xl transition-shadow duration-300 group relative overflow-hidden backdrop-blur-xl">
-								<div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-blue-200/20 via-fuchsia-200/20 to-pink-200/20 pointer-events-none z-0" />
-								<div className="flex items-start justify-between relative z-10">
-									<div>
-										<div className="font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-fuchsia-400 to-pink-400 drop-shadow-lg">{r.name}</div>
-										{r.desc && <p className="text-base text-white/80 mt-1 italic">{r.desc}</p>}
+					</div>
+				) : (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{filteredRepos.map((repo) => (
+							<div 
+								key={repo.id} 
+								className="group bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105"
+							>
+								<div className="flex items-start justify-between mb-4">
+									<div className="flex-1">
+										<h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+											{repo.name}
+										</h3>
+										{repo.desc && (
+											<p className="text-gray-600 mt-2 text-sm leading-relaxed">
+												{repo.desc}
+											</p>
+										)}
 									</div>
-									<button onClick={()=>onRemove(r.id)} className="text-red-400 font-bold hover:underline hover:scale-110 transition-transform">Remove</button>
+									<button 
+										onClick={() => onRemove(repo.id)}
+										className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+										title="Delete repository"
+									>
+										<Trash2 className="h-5 w-5" />
+									</button>
 								</div>
-								<div className="mt-3 text-xs text-white/60 flex items-center gap-2">
-									<span role="img" aria-label="star">⭐</span>Stars: {r.stars} · <span role="img" aria-label="clock">⏰</span>Updated: {new Date(r.updatedAt || r.createdAt).toLocaleString()}
+								
+								<div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+									<div className="flex items-center gap-1">
+										<Star className="h-4 w-4 text-yellow-500" />
+										<span>{repo.stars || 0}</span>
+									</div>
+									<div className="flex items-center gap-1">
+										<Clock className="h-4 w-4" />
+										<span>{new Date(repo.updatedAt || repo.createdAt).toLocaleDateString()}</span>
+									</div>
+								</div>
+								
+								<div className="flex gap-2">
+									<button className="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors font-medium">
+										Open
+									</button>
+									<button className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+										Clone
+									</button>
 								</div>
 							</div>
 						))}
 					</div>
-				</div>
-			</main>
+				)}
+			</div>
 		</div>
 	);
 }
