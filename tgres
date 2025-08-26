@@ -1,0 +1,14 @@
+                                           List of databases
+   Name    |     Owner      | Encoding |   Collate   |    Ctype    |         Access privileges         
+-----------+----------------+----------+-------------+-------------+-----------------------------------
+ _supabase | postgres       | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ postgres  | postgres       | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =Tc/postgres                     +
+           |                |          |             |             | postgres=CTc/postgres            +
+           |                |          |             |             | supabase_etl_admin=C/postgres    +
+           |                |          |             |             | dashboard_user=CTc/postgres
+ template0 | supabase_admin | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/supabase_admin                +
+           |                |          |             |             | supabase_admin=CTc/supabase_admin
+ template1 | supabase_admin | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/supabase_admin                +
+           |                |          |             |             | supabase_admin=CTc/supabase_admin
+(4 rows)
+

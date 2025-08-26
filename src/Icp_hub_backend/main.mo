@@ -1,8 +1,10 @@
+
 import Okt "canister:okt";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
+import Nat "mo:base/Nat";
 
-actor Icp_hub_backend {
+persistent actor Icp_hub_backend {
   public func createRepo(name : Text, description : Text) : async Text {
     "Repo created: " # name
   };
@@ -13,6 +15,7 @@ actor Icp_hub_backend {
 
   public func rewardContributor(principal : Principal, amount : Nat) : async Text {
     let result = await Okt.mint(principal, amount);
-    "Rewarded " # Debug.text(principal) # " with " # Debug.text(result) # " OKT"
+    Debug.print("Rewarded " # Principal.toText(principal) # " with " # Nat.toText(result) # " OKT");
+    "Rewarded " # Principal.toText(principal) # " with " # Nat.toText(result) # " OKT"
   };
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supportedChains } from '../data/dummyData'
 import { Link } from 'react-router-dom'
 import { Github, Star, GitFork, TrendingUp, Users, Code, Zap, Shield, ArrowRight, Play, Link as LinkIcon, Globe, Layers, CheckCircle, Award, Rocket, Heart, ChevronRight, ExternalLink } from 'lucide-react'
 import ThreeBackground from './ThreeBackground'
@@ -53,14 +54,7 @@ function Home() {
     }
   ]
 
-  const supportedChains = [
-    { name: "Ethereum", icon: "⟠", color: "#627eea" },
-    { name: "Internet Computer", icon: "∞", color: "#29abe2" },
-    { name: "Polygon", icon: "⬟", color: "#8247e5" },
-    { name: "Avalanche", icon: "🔺", color: "#e84142" },
-    { name: "BSC", icon: "⬢", color: "#f3ba2f" },
-    { name: "Arbitrum", icon: "🔷", color: "#28a0f0" }
-  ]
+  // ...existing code...
 
   const features = [
     {

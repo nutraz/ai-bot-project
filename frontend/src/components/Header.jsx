@@ -58,149 +58,52 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="bg-gradient-to-r from-purple-900 via-blue-900 to-pink-900 shadow-2xl border-b border-white/10 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-8">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <GitBranch className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">OpenKeyHub</span>
+              <GitBranch className="h-10 w-10 text-pink-400 drop-shadow-lg" />
+              <span className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">OpenKeyHub</span>
             </Link>
           </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
-              Repositories
-            </Link>
-            {isAuthenticated && (
-              <>
-                <Link to="/repositories" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Dashboard
-                </Link>
-                <Link to="/repo/create" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
-                  New Repository
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* User Actions */}
+          <div className="flex items-center space-x-6">
             {isAuthenticated ? (
               <>
-                <button className="relative text-gray-700 hover:text-gray-900">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
-                </button>
-                <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-700">
-                    {principal ? `${principal.slice(0, 6)}...${principal.slice(-4)}` : 'User'}
-                  </span>
-                </div>
+                <span className="text-white/80 font-bold flex items-center">
+                  <User className="h-6 w-6 mr-2" />
+                  {principal}
+                </span>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 hover:text-gray-900 flex items-center space-x-1"
+                  className="text-pink-400 hover:text-red-500 font-bold flex items-center px-4 py-2 rounded-xl bg-white/10 border border-white/20 shadow-md hover:bg-pink-600 hover:text-white transition-all"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign out</span>
+                  <LogOut className="h-6 w-6 mr-2" /> Logout
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200"
+                className="text-blue-400 font-bold flex items-center px-4 py-2 rounded-xl bg-white/10 border border-white/20 shadow-md hover:bg-blue-600 hover:text-white transition-all"
               >
-                Sign in
+                <User className="h-6 w-6 mr-2" /> Login
               </button>
             )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-gray-900"
+              onClick={() => navigate('/notifications')}
+              className="text-white/80 hover:text-blue-400 font-bold flex items-center px-4 py-2 rounded-xl bg-white/10 border border-white/20 shadow-md hover:bg-blue-600 hover:text-white transition-all"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <Bell className="h-6 w-6 mr-2" />
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col space-y-4">
-              <Link 
-                to="/repositories" 
-                className="text-gray-700 hover:text-gray-900 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Repositories
-              </Link>
-              {isAuthenticated ? (
-                <>
-                  <Link 
-                    to="/repositories"
-                    className="text-gray-700 hover:text-gray-900 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    to="/repo/create"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 text-center"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    New Repository
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout()
-                      setIsMenuOpen(false)
-                    }}
-                    className="text-gray-700 hover:text-gray-900 flex items-center justify-center space-x-1"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Sign out</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsLoginModalOpen(true)
-                    setIsMenuOpen(false)
-                  }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 w-full"
-                >
-                  Sign in
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLogin={handleLogin}
-      />
-
-      {/* Notification */}
-      {showNotification && (
-        <Notification
-          message={notificationMessage}
-          onClose={() => setShowNotification(false)}
-        />
-      )}
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
+      {showNotification && <Notification message={notificationMessage} />}
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

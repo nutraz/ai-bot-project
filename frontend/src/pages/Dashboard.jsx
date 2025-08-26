@@ -1,16 +1,23 @@
 
+
 import React from "react";
 
 export default function Dashboard() {
   return (
-    <main className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-blue-50 via-fuchsia-50 to-pink-50">
-      <div className="bg-white/80 shadow-xl rounded-2xl p-10 max-w-2xl w-full flex flex-col items-center text-center backdrop-blur-md">
-        <h2 className="text-3xl md:text-4xl font-extrabold mb-4 bg-gradient-to-r from-blue-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
-          Your Dashboard
-        </h2>
-        <p className="text-gray-700 mb-8">Here you can manage your projects, ideas, and notifications.</p>
-        {/* List projects, ideas, notifications, etc. */}
-      </div>
-    </main>
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-[#101014] overflow-hidden">
+      <main className="flex flex-col items-center justify-center w-full min-h-screen px-4 py-24">
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+          <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-8 drop-shadow-2xl tracking-tight text-center" style={{letterSpacing: '-0.03em'}}>
+            Your Dashboard
+          </h1>
+          <div className="bg-white/10 shadow-2xl rounded-3xl p-12 w-full flex flex-col items-center text-center backdrop-blur-2xl border border-white/20">
+            <p className="text-white/80 mb-8 text-lg">
+              Manage your projects, ideas, and notifications in one place.
+            </p>
+            {/* Add animated stats, project cards, quick links here */}
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }

@@ -16,8 +16,8 @@ import {
 } from 'lucide-react'
 
 function Tokens() {
-  const [user] = useState(mockUser)
-  const [stakingHistory] = useState(mockStakingHistory)
+  const [user] = useState(mockUser) // Using centralized mock data
+  // const [stakingHistory] = useState(mockStakingHistory) // Removed local definition
   const [activeTab, setActiveTab] = useState('portfolio')
   const [stakeAmount, setStakeAmount] = useState('')
   const [unstakeAmount, setUnstakeAmount] = useState('')

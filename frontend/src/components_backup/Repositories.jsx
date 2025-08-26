@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { mockRepositories } from '../data/dummyData'
 import { Link } from 'react-router-dom'
 import { Search, Filter, Star, GitFork, Eye, Calendar, Code, TrendingUp, Plus, Settings, Trash2, Edit3, Copy, Globe, Lock, AlertCircle, X, Check, MoreHorizontal, ExternalLink, Download, Upload } from 'lucide-react'
 import apiService from '../services/api'
@@ -42,24 +43,7 @@ function Repositories() {
 
   const [newTopic, setNewTopic] = useState('')
 
-  // Mock repositories for display (fallback)
-  const mockRepositories = [
-    {
-      id: 1,
-      owner: "ethereum",
-      name: "defi-yield-farming",
-      description: "Advanced yield farming protocol with automated compounding strategies for maximum returns",
-      language: "Solidity",
-      languageColor: "#3C3C3D",
-      stars: 2847,
-      forks: 456,
-      watchers: 123,
-      lastUpdated: "2 hours ago",
-      topics: ["defi", "yield-farming", "smart-contracts", "ethereum"],
-      isPrivate: false
-    },
-    // ... other mock repositories
-  ]
+  // ...existing code...
 
   useEffect(() => {
     initializeData()
