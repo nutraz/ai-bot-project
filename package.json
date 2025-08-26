@@ -13,10 +13,10 @@
     "build:backend": "cd backend && npm run build",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
     "start:frontend": "cd frontend && npm run start",
-  "test": "pnpm run test:frontend",
-  "test:frontend": "cd frontend && pnpm test",
-  "test:backend": "echo 'Motoko backend tests are not currently supported in this setup. Please run manually when dfx/moc supports it.' && exit 0",
-    "start:backend": "cd backend && npm run start"
+    "start:backend": "cd backend && npm run start",
+    "test": "pnpm run test:frontend",
+    "test:frontend": "cd frontend && pnpm test",
+    "test:backend": "echo 'Motoko backend tests are not currently supported in this setup. Please run manually when dfx/moc supports it.' && exit 0"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"
